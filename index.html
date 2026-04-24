@@ -2,18 +2,18 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 持股市值監測 v21.7</title>
+    <title>ETF 持股市值監測 v22.0 - 滿貫補貨版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.2rem; font-weight: 800; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.5; cursor: pointer; }
-        th { white-space: nowrap; font-size: 0.9rem; padding: 1.5rem 1rem !important; cursor: pointer; transition: 0.2s; position: relative; }
+        .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.3rem; font-weight: 900; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.6; cursor: pointer; }
+        th { white-space: nowrap; font-size: 0.95rem; padding: 1.8rem 1rem !important; cursor: pointer; transition: 0.2s; position: relative; }
         th:hover { background: #334155; color: #60a5fa; }
         .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 8px; }
         .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
-        /* 數據字體特大 */
-        tbody tr td { font-size: 1.3rem; padding: 2.2rem 1rem !important; }
+        /* 數據欄位字體特大 */
+        tbody tr td { font-size: 1.35rem; padding: 2.2rem 1rem !important; }
         .font-num { font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 800; }
         .config-input { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #94a3b8; outline: none; }
         .config-input:focus { border-color: #3b82f6; color: white; }
@@ -23,10 +23,7 @@
     <div class="max-w-[1900px] mx-auto">
         
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-            <div>
-                <h1 class="text-6xl font-black text-blue-400 tracking-tighter italic">PORTFOLIO ANALYZER</h1>
-                <p class="text-slate-500 font-bold mt-2 ml-1">ETF HOLDINGS CHANGE MONITORING SYSTEM</p>
-            </div>
+            <h1 class="text-6xl font-black text-blue-400 tracking-tighter italic">PORTFOLIO ANALYZER</h1>
             
             <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl flex flex-wrap gap-4 items-center">
                 <div class="flex flex-col">
@@ -39,11 +36,12 @@
                 </div>
                 <div class="h-10 w-px bg-slate-700 mx-2"></div>
                 <div class="flex flex-col">
-                    <span class="text-[10px] font-black text-emerald-500 uppercase mb-1 ml-1">Quick Batch Feed</span>
+                    <span class="text-[10px] font-black text-emerald-500 uppercase mb-1 ml-1">Batch Feeding Tools</span>
                     <div class="flex gap-2">
                         <button onclick="feedData(1)" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 1天</button>
                         <button onclick="feedData(5)" class="bg-blue-700 hover:bg-blue-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 5天</button>
                         <button onclick="feedData(15)" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 15天</button>
+                        <button onclick="feedData(30)" class="bg-purple-700 hover:bg-purple-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 30天</button>
                     </div>
                 </div>
             </div>
@@ -92,45 +90,33 @@
         let sortState = { key: 'impact', asc: false };
 
         window.onload = () => {
-            // 自動載入上次儲存的 Token 與帳號
             document.getElementById('ghOwner').value = localStorage.getItem('ghOwner') || '';
             document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
-            
             const now = new Date(), today = now.toISOString().split('T')[0];
             document.getElementById('dateB').value = today;
             document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
         };
 
-        // ⚡ 批量補貨核心邏輯
         async function feedData(days) {
-            const owner = document.getElementById('ghOwner').value;
-            const token = document.getElementById('ghToken').value;
-            
-            if(!owner || !token) return alert("請先填寫 GitHub 帳號與 Token 才能補貨！");
-            
-            localStorage.setItem('ghOwner', owner);
-            localStorage.setItem('ghToken', token);
+            const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
+            if(!owner || !token) return alert("請先填寫 GitHub 帳號與 Token 才能下令補貨！");
+            localStorage.setItem('ghOwner', owner); localStorage.setItem('ghToken', token);
 
-            if(!confirm(`確定要下令機器人補抓最近 ${days} 天的數據嗎？`)) return;
+            if(!confirm(`確定要補抓最近 ${days} 天的數據嗎？`)) return;
 
             const res = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
-                method: 'POST', 
-                headers: { 
-                    'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/vnd.github+json'
-                },
+                method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { days: String(days) } })
             });
-            
-            if(res.ok) alert(`🚀 指令已發送！機器人正在處理 ${days} 天的資料，請等 2 分鐘再跑分析。`);
-            else alert("指令發送失敗。請檢查您的 Token 權限或帳號是否填錯。");
+            if(res.ok) alert(`🚀 指令已送出！機器人正在執行 ${days} 天補貨任務，請等 2 分鐘。`);
+            else alert("發送失敗，請確認 Token 權限。");
         }
 
         async function runAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
             try {
                 const [rA, rB] = await Promise.all([fetch(`data/${etf}/${dA}.json`), fetch(`data/${etf}/${dB}.json`)]);
-                if(!rA.ok || !rB.ok) return alert("資料缺失！該日期尚無檔案，請點擊上方的『補 5 天』按鈕試試。");
+                if(!rA.ok || !rB.ok) return alert("資料缺失！該日期尚無檔案，請點擊上方的補貨按鈕。");
                 
                 const jsonA = await rA.json(), jsonB = await rB.json();
                 const mapA = Object.fromEntries(jsonA.holdings.map(s => [s.id, s]));
@@ -143,17 +129,15 @@
                     const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                     const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
                     const valA = sA.share * pA, valB = sB.share * pB, impact = valB - valA;
-                    
                     let status = "持平", color = "text-slate-500";
                     if(sA.share === 0) { status = "新進"; color = "text-yellow-400"; }
                     else if(sB.share === 0) { status = "出清"; color = "text-red-500"; }
                     else if(sB.share > sA.share) { status = "加碼"; color = "text-red-400"; }
                     else if(sB.share < sA.share) { status = "減碼"; color = "text-emerald-400"; }
-                    
                     return { id, name: sB.name || sA.name, status, status_rank: statusWeight[status], color, pA, shareA: sA.share, valA, pB, shareB: sB.share, valB, impact };
                 });
                 renderTable();
-            } catch (e) { alert("讀取出錯，請確認資料夾內有標準 JSON 檔案。"); }
+            } catch (e) { alert("讀取錯誤，請確認資料結構。"); }
         }
 
         function handleSort(key) {
