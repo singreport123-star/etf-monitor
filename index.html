@@ -3,51 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ETF 加減碼監測站 v2.1</title>
+    <title>ETF 加減碼監測站 v2.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 強制顯示月曆圖示 */
+        /* 強制顯示月曆按鈕並美化 */
+        input[type="date"] { position: relative; }
         input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-            font-size: 1.2rem;
+            background: transparent; bottom: 0; color: transparent; cursor: pointer;
+            height: auto; left: 0; position: absolute; right: 0; top: 0; width: auto;
+        }
+        .calendar-wrapper { position: relative; display: flex; align-items: center; }
+        .calendar-wrapper::after {
+            content: '📅'; position: absolute; right: 10px; pointer-events: none;
         }
         th { cursor: pointer; position: relative; }
-        th:hover { background-color: #374151; }
         .sort-icon::after { content: '↕'; position: absolute; right: 5px; opacity: 0.2; }
         .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 p-4 md:p-8">
+<body class="bg-slate-900 text-slate-100 p-4 md:p-8 font-sans">
     <div class="max-w-6xl mx-auto">
         <h1 class="text-3xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400">📊 ETF 加減碼監測站</h1>
 
         <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl mb-8 shadow-2xl relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-            <h2 class="text-sm font-bold mb-4 text-slate-400 tracking-widest uppercase">Step 1. 雲端數據更新</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xs font-bold text-slate-400 tracking-widest uppercase">Step 1. 雲端數據更新</h2>
+                <button onclick="clearToken()" class="text-[10px] text-red-400 hover:underline">⚠️ 清除紀錄 (登出)</button>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                 <div class="col-span-1 md:col-span-2">
-                    <div class="flex justify-between items-end mb-1">
-                        <label class="text-xs text-slate-500">GitHub 安全憑證</label>
-                        <button onclick="clearToken()" class="text-[10px] text-red-400 hover:underline">⚠️ 清除紀錄 (登出)</button>
-                    </div>
                     <div class="flex gap-2">
-                        <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 w-1/3 focus:border-blue-500 outline-none transition-all">
-                        <input id="ghToken" type="password" placeholder="ghp_xxxxxxxxxxxx" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 flex-1 focus:border-blue-500 outline-none transition-all">
+                        <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 w-1/3 focus:border-blue-500 outline-none">
+                        <input id="ghToken" type="password" placeholder="ghp_Token" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 flex-1 focus:border-blue-500 outline-none">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs text-slate-500 mb-1">採集日期 (點擊開啟月曆)</label>
-                    <input id="triggerDate" type="date" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 w-full text-white font-mono">
+                <div class="calendar-wrapper">
+                    <input id="triggerDate" type="date" class="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 w-full text-white">
                 </div>
-                <button onclick="triggerAction()" class="bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black shadow-lg shadow-blue-900/20 active:scale-95 transition-all">啟動雲端抓取</button>
+                <button onclick="triggerAction()" class="bg-blue-600 hover:bg-blue-500 py-2.5 rounded-lg font-black shadow-lg active:scale-95 transition-all">啟動雲端抓取</button>
             </div>
             <p id="statusTxt" class="mt-4 text-xs font-bold text-emerald-400 italic"></p>
         </div>
 
         <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl mb-8 border border-slate-700">
-            <h2 class="text-sm font-bold mb-4 text-slate-400 tracking-widest uppercase">Step 2. 歷史資料比對</h2>
             <div class="flex flex-wrap gap-6 items-end">
                 <div class="flex-1 min-w-[200px]">
                     <label class="block text-xs text-slate-500 mb-1">選擇標的</label>
@@ -56,16 +56,10 @@
                         <option value="00982A">00982A (群益精選強棒)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-xs text-slate-500 mb-1">日期 A (較舊)</label>
-                    <select id="dateA" class="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 w-36 outline-none"></select>
-                </div>
-                <div class="text-slate-600 font-black mb-2">VS</div>
-                <div>
-                    <label class="block text-xs text-slate-500 mb-1">日期 B (較新)</label>
-                    <select id="dateB" class="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 w-36 outline-none"></select>
-                </div>
-                <button onclick="compareData()" class="bg-emerald-600 hover:bg-emerald-500 px-8 py-2.5 rounded-lg font-black shadow-lg shadow-emerald-900/20 active:scale-95 transition-all">開始計算</button>
+                <div><label class="block text-xs text-slate-500 mb-1">日期 A (較舊)</label><select id="dateA" class="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 w-36 outline-none"></select></div>
+                <div class="text-slate-600 font-black mb-2 px-2">VS</div>
+                <div><label class="block text-xs text-slate-500 mb-1">日期 B (較新)</label><select id="dateB" class="bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 w-36 outline-none"></select></div>
+                <button onclick="compareData()" class="bg-emerald-600 hover:bg-emerald-500 px-8 py-2.5 rounded-lg font-black shadow-lg active:scale-95 transition-all">開始計算</button>
             </div>
         </div>
 
@@ -73,7 +67,7 @@
             <table class="w-full text-left" id="mainTable">
                 <thead class="bg-slate-700/50 text-slate-400 text-[10px] uppercase tracking-widest">
                     <tr>
-                        <th class="p-4 sort-icon" onclick="sortRows('name')">標的名稱</th>
+                        <th class="p-4 sort-icon" onclick="sortRows('name')">標的名稱 / 狀態</th>
                         <th class="p-4 text-right sort-icon" onclick="sortRows('shareA')">A日股數</th>
                         <th class="p-4 text-right sort-icon" onclick="sortRows('shareB')">B日股數</th>
                         <th class="p-4 text-right sort-icon" onclick="sortRows('diff')">異動股數</th>
@@ -81,9 +75,7 @@
                         <th class="p-4 text-right text-blue-400 sort-icon" onclick="sortRows('impact')">估計加減碼</th>
                     </tr>
                 </thead>
-                <tbody id="resTable" class="text-sm divide-y divide-slate-700/50">
-                    <tr><td colspan="6" class="p-20 text-center text-slate-600 italic">請在上方選取日期，或啟動抓取新數據</td></tr>
-                </tbody>
+                <tbody id="resTable" class="text-sm divide-y divide-slate-700/50"></tbody>
             </table>
         </div>
     </div>
@@ -99,116 +91,71 @@
             loadDateList();
         };
 
-        function clearToken() {
-            if(confirm("確定要清除帳號與 Token 紀錄嗎？")) {
-                localStorage.removeItem('ghOwner');
-                localStorage.removeItem('ghToken');
-                location.reload();
-            }
-        }
+        function clearToken() { if(confirm("清除 Token？")) { localStorage.clear(); location.reload(); } }
 
         async function loadDateList() {
             try {
                 const res = await fetch('list.json?t=' + Date.now());
                 const dates = await res.json();
-                const selA = document.getElementById('dateA');
-                const selB = document.getElementById('dateB');
-                selA.innerHTML = ''; selB.innerHTML = '';
-                dates.forEach(d => {
-                    selA.add(new Option(d, d));
-                    selB.add(new Option(d, d));
-                });
+                const selA = document.getElementById('dateA'), selB = document.getElementById('dateB');
+                dates.forEach(d => { selA.add(new Option(d, d)); selB.add(new Option(d, d)); });
                 if(dates.length > 1) selA.selectedIndex = 1;
-            } catch (e) { console.log("等待初次採集..."); }
+            } catch (e) { }
         }
 
         async function triggerAction() {
-            const owner = document.getElementById('ghOwner').value;
-            const token = document.getElementById('ghToken').value;
-            const date = document.getElementById('triggerDate').value;
-            const txt = document.getElementById('statusTxt');
-
-            if(!owner || !token || !date) return alert("請填入完整資訊");
-            localStorage.setItem('ghOwner', owner);
-            localStorage.setItem('ghToken', token);
-
-            txt.innerText = "🚀 雲端任務已派發！請等待 2 分鐘後重新整理頁面。";
+            const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value, date = document.getElementById('triggerDate').value;
+            document.getElementById('statusTxt').innerText = "🚀 任務已派發！請等待約 2-3 分鐘。";
             const res = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
+                method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { target_date: date } })
             });
-            if(!res.ok) txt.innerText = "❌ 失敗：請檢查帳號或 Token 權限。";
+            if(!res.ok) document.getElementById('statusTxt').innerText = "❌ 失敗，請檢查權限。";
         }
 
         async function compareData() {
-            const etf = document.getElementById('etfId').value;
-            const dA = document.getElementById('dateA').value;
-            const dB = document.getElementById('dateB').value;
-            const tbody = document.getElementById('resTable');
-
-            try {
-                const [dataA, dataB] = await Promise.all([
-                    fetch(`data/${dA}.json`).then(r => r.json()),
-                    fetch(`data/${dB}.json`).then(r => r.json())
-                ]);
-
-                const mapA = Object.fromEntries(dataA.etfs[etf].map(s => [s.id, s]));
-                const mapB = Object.fromEntries(dataB.etfs[etf].map(s => [s.id, s]));
-                const pricesB = dataB.market_prices || {};
-                
-                currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
-                    const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
-                    const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
-                    const diff = sB.share - sA.share;
-                    const price = pricesB[id] || 0;
-                    return { id, name: sB.name || sA.name, shareA: sA.share, shareB: sB.share, diff, price, impact: diff * price };
-                }).filter(row => row.diff !== 0);
-
-                sortRows(sortState.key, true);
-            } catch (e) {
-                tbody.innerHTML = '<tr><td colspan="6" class="p-10 text-center text-red-400 font-bold">資料讀取失敗，可能數據還在雲端運算中...</td></tr>';
-            }
+            const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
+            const [dataA, dataB] = await Promise.all([fetch(`data/${dA}.json`).then(r => r.json()), fetch(`data/${dB}.json`).then(r => r.json())]);
+            const mapA = Object.fromEntries(dataA.etfs[etf].map(s => [s.id, s])), mapB = Object.fromEntries(dataB.etfs[etf].map(s => [s.id, s]));
+            const pricesB = dataB.market_prices || {};
+            
+            currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
+                const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
+                const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
+                const diff = sB.share - sA.share;
+                const price = pricesB[id] || 0;
+                let status = "不變", statusColor = "bg-slate-700 text-slate-400";
+                if(diff > 0) { status = "加碼"; statusColor = "bg-red-500/20 text-red-400"; }
+                else if(diff < 0) { status = "減碼"; statusColor = "bg-emerald-500/20 text-emerald-400"; }
+                return { id, name: sB.name || sA.name, shareA: sA.share, shareB: sB.share, diff, price, impact: diff * price, status, statusColor };
+            });
+            sortRows(sortState.key, true);
         }
 
         function sortRows(key, init = false) {
-            if(!init) {
-                if(sortState.key === key) sortState.asc = !sortState.asc;
-                else { sortState.key = key; sortState.asc = false; }
-            }
-            
-            currentData.sort((a, b) => {
-                let vA = a[key], vB = b[key];
-                return sortState.asc ? (vA > vB ? 1 : -1) : (vB > vA ? 1 : -1);
-            });
-
+            if(!init) { if(sortState.key === key) sortState.asc = !sortState.asc; else { sortState.key = key; sortState.asc = false; } }
+            currentData.sort((a, b) => sortState.asc ? (a[key] > b[key] ? 1 : -1) : (b[key] > a[key] ? 1 : -1));
             renderTable();
         }
 
         function renderTable() {
-            const tbody = document.getElementById('resTable');
-            const headers = document.querySelectorAll('th');
             const keys = ['name', 'shareA', 'shareB', 'diff', 'price', 'impact'];
-            
-            headers.forEach((th, i) => {
+            document.querySelectorAll('th').forEach((th, i) => {
                 th.classList.toggle('sort-asc', keys[i] === sortState.key && sortState.asc);
                 th.classList.toggle('sort-desc', keys[i] === sortState.key && !sortState.asc);
             });
-
-            tbody.innerHTML = currentData.map(row => `
+            document.getElementById('resTable').innerHTML = currentData.map(row => `
                 <tr class="hover:bg-slate-700/30 transition-colors">
-                    <td class="p-4"><span class="text-[9px] font-mono text-slate-500">${row.id}</span><br><span class="font-bold">${row.name}</span></td>
+                    <td class="p-4"><span class="text-[9px] font-mono text-slate-500">${row.id}</span><br><span class="font-bold">${row.name}</span>
+                        <span class="ml-2 text-[10px] px-1.5 py-0.5 rounded ${row.statusColor}">${row.status}</span></td>
                     <td class="p-4 text-right text-slate-400">${row.shareA.toLocaleString()}</td>
                     <td class="p-4 text-right text-slate-400">${row.shareB.toLocaleString()}</td>
-                    <td class="p-4 text-right font-black ${row.diff > 0 ? 'text-red-400' : 'text-emerald-400'}">
-                        ${row.diff > 0 ? '+' : ''}${row.diff.toLocaleString()}
-                    </td>
-                    <td class="p-4 text-right font-mono text-slate-300">${row.price}</td>
-                    <td class="p-4 text-right font-mono font-black ${row.impact > 0 ? 'text-red-400' : 'text-emerald-400'}">
-                        ${Math.round(row.impact).toLocaleString()}
-                    </td>
-                </tr>
-            `).join('') || '<tr><td colspan="6" class="p-10 text-center text-slate-500 italic">此期間無持股變動</td></tr>';
+                    <td class="p-4 text-right font-black ${row.diff > 0 ? 'text-red-400' : (row.diff < 0 ? 'text-emerald-400' : 'text-slate-500')}">
+                        ${row.diff > 0 ? '+' : ''}${row.diff.toLocaleString()}</td>
+                    <td class="p-4 text-right font-mono text-slate-300">${row.price || '-'}</td>
+                    <td class="p-4 text-right font-mono font-black ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
+                        ${Math.round(row.impact).toLocaleString()}</td>
+                </tr>`).join('');
         }
     </script>
 </body>
