@@ -2,39 +2,38 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 加減碼監測站 v7.0</title>
+    <title>ETF 市值變動監測站 v9.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         input[type="date"] { background: #1e293b; color: white; border: 2px solid #334155; padding: 10px; border-radius: 12px; cursor: pointer; width: 100%; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.2; cursor: pointer; }
         th { cursor: pointer; position: relative; user-select: none; }
-        .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 4px; }
+        .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 5px; }
         .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 p-4 md:p-8">
+<body class="bg-slate-900 text-slate-100 p-4 md:p-8 font-sans">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 持股與加減碼全功能監測</h1>
+        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 持股市值異動分析</h1>
 
         <div class="bg-slate-800 p-4 rounded-xl mb-6 flex gap-4 text-xs items-center border border-slate-700 shadow-xl">
-            <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-2 border border-slate-700 rounded w-40 outline-none">
+            <input id="ghOwner" type="text" placeholder="GitHub 帳號" class="bg-slate-900 p-2 border border-slate-700 rounded w-40 outline-none">
             <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-2 border border-slate-700 rounded w-60 outline-none">
-            <div id="diagStatus" class="ml-auto font-mono text-emerald-400 font-bold">系統就緒</div>
+            <div id="diagStatus" class="ml-auto font-mono text-emerald-400 font-bold uppercase">Ready</div>
         </div>
 
         <div class="bg-slate-800 p-8 rounded-2xl mb-8 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-end">
                 <div>
-                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">標的</label>
+                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">ETF</label>
                     <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
-                <div><label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 起始 A (舊)</label><input id="dateA" type="date"></div>
-                <div class="text-center pb-3 text-slate-600 font-black italic">VS</div>
-                <div><label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 結束 B (新)</label><input id="dateB" type="date"></div>
+                <div><label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 Date A (舊)</label><input id="dateA" type="date"></div>
+                <div class="text-center pb-3 text-slate-600 font-black italic text-xl">VS</div>
+                <div><label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 Date B (新)</label><input id="dateB" type="date"></div>
                 <button onclick="runAnalysis()" class="bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black shadow-lg transition active:scale-95">跑分析報表</button>
             </div>
         </div>
@@ -43,13 +42,12 @@
             <table class="w-full text-left" id="mainTable">
                 <thead class="bg-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                     <tr>
-                        <th class="p-5 sort-icon" onclick="handleSort('name')">標的</th>
+                        <th class="p-5 sort-icon" onclick="handleSort('name')">標的名</th>
                         <th class="p-5 sort-icon" onclick="handleSort('status')">異動狀態</th>
-                        <th class="p-5 text-right sort-icon" onclick="handleSort('shareA')">A日股數</th>
-                        <th class="p-5 text-right sort-icon" onclick="handleSort('shareB')">B日股數</th>
-                        <th class="p-5 text-right bg-slate-600/30 sort-icon" onclick="handleSort('diff')">股數異動</th>
-                        <th class="p-5 text-right sort-icon" onclick="handleSort('price')">B日收盤價</th>
-                        <th class="p-5 text-right text-blue-300 sort-icon" onclick="handleSort('impact')">加減碼金額</th>
+                        <th class="p-5 text-right sort-icon" onclick="handleSort('valA')">A日市值</th>
+                        <th class="p-5 text-right sort-icon" onclick="handleSort('valB')">B日市值</th>
+                        <th class="p-5 text-right bg-slate-600/30 sort-icon" onclick="handleSort('impact')">市值變動 (NTD)</th>
+                        <th class="p-5 text-right sort-icon" onclick="handleSort('priceB')">B日收盤價</th>
                     </tr>
                 </thead>
                 <tbody id="resTable" class="text-sm divide-y divide-slate-700/50"></tbody>
@@ -71,6 +69,7 @@
 
         async function triggerAction(date) {
             const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
+            localStorage.setItem('ghOwner', owner); localStorage.setItem('ghToken', token);
             await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { target_date: date } })
@@ -84,27 +83,32 @@
             if(!rA.ok || !rB.ok) {
                 if(!rA.ok) await triggerAction(dA);
                 if(!rB.ok) await triggerAction(dB);
-                return alert("部分資料尚在補抓，請等 2 分鐘。");
+                return alert("補抓數據中，請等 2 分鐘。");
             }
 
-            const dataA = await rA.json(), dataB = await rB.json();
-            const mapA = Object.fromEntries(dataA.etfs[etf].map(s => [s.id, s]));
-            const mapB = Object.fromEntries(dataB.etfs[etf].map(s => [s.id, s]));
-            const pricesB = dataB.market_prices || {};
+            const jsonA = await rA.json(), jsonB = await rB.json();
+            const mapA = Object.fromEntries(jsonA.etfs[etf].map(s => [s.id, s]));
+            const mapB = Object.fromEntries(jsonB.etfs[etf].map(s => [s.id, s]));
+            const pricesA = jsonA.market_prices || {}, pricesB = jsonB.market_prices || {};
             
             currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
                 const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                 const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
-                const diff = sB.share - sA.share;
-                const price = (pricesB[id] !== undefined) ? pricesB[id] : "無價格";
-                const impact = (typeof price === 'number') ? diff * price : 0;
                 
-                let status = "持平", color = "text-slate-500 border-slate-700";
-                if(sB.share === 0 && sA.share > 0) { status = "出清"; color = "text-red-500 border-red-900 bg-red-950/20"; }
-                else if(diff > 0) { status = "加碼"; color = "text-red-400 border-red-800"; }
-                else if(diff < 0) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
+                const pA = (typeof pricesA[id] === 'number') ? pricesA[id] : 0;
+                const pB = (typeof pricesB[id] === 'number') ? pricesB[id] : 0;
                 
-                return { id, name: (sB.name || sA.name || '未知'), status, shareA: sA.share, shareB: sB.share, diff, price, impact, color };
+                const valA = sA.share * pA;
+                const valB = sB.share * pB;
+                const impact = valB - valA;
+                
+                let status = "不變", color = "text-slate-500 border-slate-700";
+                if(sA.share === 0 && sB.share > 0) { status = "新進"; color = "text-yellow-400 border-yellow-900"; }
+                else if(sB.share === 0 && sA.share > 0) { status = "出清"; color = "text-red-500 border-red-900 bg-red-950/20"; }
+                else if(sB.share > sA.share) { status = "加碼"; color = "text-red-400 border-red-800"; }
+                else if(sB.share < sA.share) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
+                
+                return { id, name: (sB.name || sA.name || '未知'), status, valA, valB, impact, priceB: (pB || '無價格'), color };
             });
             renderTable();
         }
@@ -116,30 +120,23 @@
         }
 
         function renderTable() {
-            currentData.sort((a, b) => {
-                let vA = a[sortState.key], vB = b[sortState.key];
-                if(vA === "無價格") return 1;
-                if(vB === "無價格") return -1;
-                return sortState.asc ? (vA > vB ? 1 : -1) : (vB > vA ? 1 : -1);
-            });
-
-            const keys = ['name', 'status', 'shareA', 'shareB', 'diff', 'price', 'impact'];
+            currentData.sort((a, b) => sortState.asc ? (a[sortState.key] > b[sortState.key] ? 1 : -1) : (b[sortState.key] > a[sortState.key] ? 1 : -1));
+            
+            const keys = ['name', 'status', 'valA', 'valB', 'impact', 'priceB'];
             document.querySelectorAll('th').forEach((th, i) => {
                 th.classList.toggle('sort-asc', keys[i] === sortState.key && sortState.asc);
                 th.classList.toggle('sort-desc', keys[i] === sortState.key && !sortState.asc);
             });
 
             document.getElementById('resTable').innerHTML = currentData.map(row => `
-                <tr class="hover:bg-slate-700/30 transition-all">
+                <tr class="hover:bg-slate-700/40">
                     <td class="p-5"><b>${row.name}</b> <br><span class="text-[9px] font-mono text-slate-500">${row.id}</span></td>
                     <td class="p-5"><span class="text-[10px] px-2 py-0.5 border rounded-full font-black ${row.color}">${row.status}</span></td>
-                    <td class="p-5 text-right text-slate-400">${row.shareA.toLocaleString()}</td>
-                    <td class="p-5 text-right text-slate-400">${row.shareB.toLocaleString()}</td>
-                    <td class="p-5 text-right font-black ${row.diff > 0 ? 'text-red-400' : (row.diff < 0 ? 'text-emerald-400' : 'text-slate-500')}">
-                        ${row.diff > 0 ? '+' : ''}${row.diff.toLocaleString()}</td>
-                    <td class="p-5 text-right font-bold ${typeof row.price === 'string' ? 'text-yellow-500 text-[10px]' : 'text-slate-200'}">${row.price}</td>
-                    <td class="p-5 text-right font-mono font-black ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
-                        ${row.impact !== 0 ? Math.round(row.impact).toLocaleString() : '-'}</td>
+                    <td class="p-5 text-right text-slate-400">${Math.round(row.valA).toLocaleString()}</td>
+                    <td class="p-5 text-right text-slate-400">${Math.round(row.valB).toLocaleString()}</td>
+                    <td class="p-5 text-right font-black ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
+                        ${row.impact > 0 ? '+' : ''}${Math.round(row.impact).toLocaleString()}</td>
+                    <td class="p-5 text-right font-bold text-slate-300">${row.priceB}</td>
                 </tr>`).join('');
         }
     </script>
