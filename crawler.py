@@ -13,7 +13,7 @@ def get_yahoo_prices(stock_ids, target_date_str):
     if not stock_ids: return {}
     
     clean_ids = list(set([str(sid).strip() for sid in stock_ids if str(sid).strip().isdigit()]))
-    print(f"--- 執行全宇宙標的價格對齊 (共 {len(clean_ids)} 檔) ---")
+    print(f"--- 執行全宇宙標的價格補完 (共 {len(clean_ids)} 檔) ---")
     
     tickers = [f"{sid}.TW" for sid in clean_ids] + [f"{sid}.TWO" for sid in clean_ids]
     
@@ -60,15 +60,16 @@ if __name__ == "__main__":
     result = {"date": ad_date, "etfs": {}, "market_prices": {}}
     
     # 1. 抓取今日標的名單
-    result["etfs"]["00981A"] = fetch_unified(m_date)
-    result["etfs"]["00982A"] = fetch_capital(ad_date)
+    try:
+        result["etfs"]["00981A"] = fetch_unified(m_date)
+        result["etfs"]["00982A"] = fetch_capital(ad_date)
+    except: pass
 
     # 2. 暴力聯集：確保「歷史出現過的標的」也必須在今天的價格名單中
     universe_ids = set()
     for etf_data in result["etfs"].values():
         for s in etf_data: universe_ids.add(s['id'])
     
-    # 打開 data/ 資料夾內所有的舊 JSON，把裡面的 ID 全部挖出來
     if os.path.exists('data'):
         for f in os.listdir('data'):
             if f.endswith('.json'):
@@ -79,7 +80,7 @@ if __name__ == "__main__":
                             for s in e_data: universe_ids.add(s['id'])
                 except: continue
 
-    # 3. 抓取這一大包聯集名單的所有價格
+    # 3. 抓取這大包名單的所有價格
     result["market_prices"] = get_yahoo_prices(list(universe_ids), ad_date)
     
     os.makedirs('data', exist_ok=True)
