@@ -8,36 +8,52 @@ def get_dates(target_date_str):
     dt = datetime.strptime(target_date_str, "%Y-%m-%d")
     return dt.strftime("%Y-%m-%d"), f"{dt.year - 1911}/{dt.strftime('%m/%d')}"
 
+def force_fetch_price(sid, target_date_str):
+    """針對 0 股價的標的進行單點暴力重抓"""
+    for suffix in ['.TW', '.TWO']:
+        ticker = f"{sid}{suffix}"
+        try:
+            # 抓取最近 10 天的歷史紀錄，確保拿得到最新的有效收盤價
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="10d")
+            if not hist.empty:
+                last_price = hist['Close'].dropna().iloc[-1]
+                if last_price > 0:
+                    return round(float(last_price), 2)
+        except: continue
+    return "Yahoo 無資料" # 如果連單點抓取都失敗，直接回傳文字
+
 def get_yahoo_prices(stock_ids, target_date_str):
     prices = {}
     if not stock_ids: return {}
+    print(f"--- 啟動 Yahoo 全域價格引擎 (標的數: {len(stock_ids)}) ---")
     
-    # 建立台股代碼池 (上市 + 上櫃)
+    # 第一輪：批量抓取
     all_tickers = [f"{sid}.TW" for sid in stock_ids] + [f"{sid}.TWO" for sid in stock_ids]
-    
     try:
-        # 追蹤區間拉長到 1 個月，確保停牌或出清股絕對能抓到最後收盤價
         target_dt = datetime.strptime(target_date_str, "%Y-%m-%d")
-        start_dt = target_dt - timedelta(days=30)
-        end_dt = target_dt + timedelta(days=1)
-        
-        data = yf.download(all_tickers, start=start_dt.strftime("%Y-%m-%d"), 
-                           end=end_dt.strftime("%Y-%m-%d"), group_by='ticker', progress=False)
-        
+        data = yf.download(all_tickers, period="5d", group_by='ticker', progress=False)
         for sid in stock_ids:
-            price = 0
+            p = 0
             for suffix in ['.TW', '.TWO']:
-                ticker = f"{sid}{suffix}"
-                if ticker in data.columns.levels[0]:
-                    series = data[ticker]['Close'].dropna()
+                t = f"{sid}{suffix}"
+                if t in data.columns.levels[0]:
+                    series = data[t]['Close'].dropna()
                     if not series.empty:
-                        price = round(float(series.iloc[-1]), 2)
+                        p = round(float(series.iloc[-1]), 2)
                         break
-            prices[sid] = price
-    except Exception as e:
-        print(f"Yahoo 引擎異常: {e}")
+            prices[sid] = p
+    except: pass
+
+    # 第二輪：防呆檢查，如果是 0 就暴力單點重抓
+    for sid in stock_ids:
+        if prices.get(sid, 0) == 0:
+            print(f"🕵️ 偵測到 {sid} 股價異常，執行暴力重抓...")
+            prices[sid] = force_fetch_price(sid, target_date_str)
+            
     return prices
 
+# fetch_unified 與 fetch_capital 維持正常抓取
 def fetch_unified(m_date):
     session = requests.Session()
     headers = {"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"}
@@ -59,25 +75,24 @@ if __name__ == "__main__":
     ad_date, m_date = get_dates(target_date)
     result = {"date": ad_date, "etfs": {}, "market_prices": {}}
     
-    # 1. 抓取今日成分股
     result["etfs"]["00981A"] = fetch_unified(m_date)
     result["etfs"]["00982A"] = fetch_capital(ad_date)
     
-    # 2. 暴力蒐集所有歷史出現過的 ID
-    master_ids = set()
+    # 掃描歷史與今日 ID
+    ids = set()
     for etf in result["etfs"].values():
-        for s in etf: master_ids.add(s['id'])
-        
+        for s in etf: ids.add(s['id'])
     if os.path.exists('data'):
-        for f_name in os.listdir('data'):
-            if f_name.endswith('.json'):
-                with open(f'data/{f_name}', 'r') as f:
-                    past = json.load(f)
-                    for e_data in past.get('etfs', {}).values():
-                        for s in e_data: master_ids.add(s['id'])
+        for f in os.listdir('data'):
+            if f.endswith('.json'):
+                try:
+                    with open(f'data/{f}', 'r') as j:
+                        past = json.load(j)
+                        for e_data in past.get('etfs', {}).values():
+                            for s in e_data: ids.add(s['id'])
+                except: continue
 
-    # 3. 抓取所有 ID 的價格
-    result["market_prices"] = get_yahoo_prices(list(master_ids), ad_date)
+    result["market_prices"] = get_yahoo_prices(list(ids), ad_date)
     
     os.makedirs('data', exist_ok=True)
     with open(f"data/{ad_date}.json", 'w', encoding='utf-8') as f:
