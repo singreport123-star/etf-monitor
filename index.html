@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 市值變動監測 v18.0</title>
+    <title>ETF 持股市值監測 v18.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.3rem; font-weight: 900; }
@@ -15,24 +15,24 @@
 </head>
 <body class="bg-slate-900 text-slate-100 p-8">
     <div class="max-w-[1900px] mx-auto">
-        <h1 class="text-6xl font-black mb-12 text-blue-400 tracking-tighter italic">ETF MARKET ANALYZER</h1>
+        <h1 class="text-6xl font-black mb-12 text-blue-400 tracking-tighter">📊 ETF 持股市值變動分析 (v18.1)</h1>
 
         <div class="bg-slate-800 p-12 rounded-[3rem] mb-12 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-end">
                 <div class="md:col-span-3">
-                    <label class="block text-sm text-slate-500 mb-4 font-bold uppercase tracking-widest">Target Portfolio</label>
+                    <label class="block text-sm text-slate-500 mb-4 font-bold uppercase tracking-widest">Select Target</label>
                     <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border-2 border-slate-700 w-full font-black text-2xl outline-none focus:border-blue-500">
-                        <option value="00981A">00981A (統一強棒)</option>
-                        <option value="00982A">00982A (群益強棒)</option>
+                        <option value="00981A">00981A (統一)</option>
+                        <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
                 <div class="md:col-span-3">
-                    <label class="block text-sm text-blue-400 mb-4 font-bold">📅 起始 A (舊)</label>
+                    <label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 起始 A (舊日期)</label>
                     <input id="dateA" type="date" class="date-input w-full">
                 </div>
                 <div class="md:col-span-1 text-center pb-6 text-slate-600 font-black italic text-5xl">VS</div>
                 <div class="md:col-span-3">
-                    <label class="block text-sm text-blue-400 mb-4 font-bold">📅 結束 B (新)</label>
+                    <label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 結束 B (新日期)</label>
                     <input id="dateB" type="date" class="date-input w-full">
                 </div>
                 <div class="md:col-span-2">
@@ -45,7 +45,7 @@
             <table class="w-full text-left" id="mainTable">
                 <thead class="bg-slate-700 text-slate-300 font-black uppercase tracking-widest">
                     <tr>
-                        <th class="p-8">標的資訊</th>
+                        <th class="p-8">標的</th>
                         <th>異動狀態</th>
                         <th class="text-right">A日股價</th>
                         <th class="text-right">A日股數</th>
@@ -65,9 +65,19 @@
         async function runAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
             try {
-                // 路徑結構：data/ETF_ID/YYYY-MM-DD.json
+                // 資料分家路徑：data/ETF_ID/DATE.json
                 const [rA, rB] = await Promise.all([fetch(`data/${etf}/${dA}.json`), fetch(`data/${etf}/${dB}.json`)]);
-                if(!rA.ok || !rB.ok) return alert(`⚠️ 警告：${etf} 在指定日期的資料夾下找不到檔案。請確認機器人已跑完任務。`);
+                if(!rA.ok || !rB.ok) {
+                    // 自動補件邏輯
+                    const owner = localStorage.getItem('ghOwner'), token = localStorage.getItem('ghToken');
+                    const trigger = async (d) => await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
+                        method: 'POST', headers: { 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ ref: 'main', inputs: { target_date: d } })
+                    });
+                    if(!rA.ok) await trigger(dA);
+                    if(!rB.ok) await trigger(dB);
+                    return alert(`⚠️ 檔案尚未生成於 data/${etf}/ 資料夾下。機器人已啟動，請等 2 分鐘。`);
+                }
                 
                 const jsonA = await rA.json(), jsonB = await rB.json();
                 const mapA = Object.fromEntries(jsonA.holdings.map(s => [s.id, s]));
@@ -77,11 +87,7 @@
                 const combined = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
                     const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                     const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
-                    
-                    // 價格對齊
-                    const pA = Number(pA_pool[id]) || 0;
-                    const pB = Number(pB_pool[id]) || 0;
-                    
+                    const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
                     const valA = sA.share * pA, valB = sB.share * pB, impact = valB - valA;
                     
                     let status = "持平", color = "text-slate-500 border-slate-700";
@@ -105,10 +111,10 @@
                         <td class="text-right font-num text-blue-300 font-black">${row.pB || '-'}</td>
                         <td class="text-right font-num text-slate-100 font-bold">${row.shareB.toLocaleString()}</td>
                         <td class="text-right font-num text-white font-black">${Math.round(row.valB).toLocaleString()}</td>
-                        <td class="text-right font-num text-3xl ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
+                        <td class="text-right font-num text-4xl ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                             ${row.impact > 0 ? '+' : ''}${Math.round(row.impact).toLocaleString()}</td>
                     </tr>`).join('');
-            } catch (e) { alert("分析失敗，請檢查資料結構。"); }
+            } catch (e) { alert("分析錯誤：請確認該 ETF 已有歷史資料。"); }
         }
     </script>
 </body>
