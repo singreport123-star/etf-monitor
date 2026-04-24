@@ -2,12 +2,12 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 全能監控站 v4.1</title>
+    <title>ETF 全能監控站 v4.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        input[type="date"] { background: #1e293b; color: white; border: 2px solid #334155; padding: 10px; border-radius: 12px; cursor: pointer; width: 100%; }
+        input[type="date"] { background: #1e293b; color: white; border: 2px solid #334155; padding: 10px; border-radius: 12px; cursor: pointer; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.5; cursor: pointer; }
-        th { cursor: pointer; user-select: none; position: relative; }
+        th { cursor: pointer; position: relative; }
         .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 5px; }
         .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
@@ -15,11 +15,11 @@
 </head>
 <body class="bg-slate-900 text-slate-100 p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 變動全能監測站</h1>
+        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 持股變動全功能監測</h1>
 
         <div class="bg-slate-800 p-4 rounded-xl mb-6 flex gap-4 text-xs items-center border border-slate-700">
-            <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-1.5 border border-slate-700 rounded w-32 outline-none">
-            <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-1.5 border border-slate-700 rounded w-48 outline-none">
+            <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-2 border border-slate-700 rounded w-32 outline-none">
+            <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-2 border border-slate-700 rounded w-48 outline-none">
             <span id="globalStatus" class="text-emerald-400 font-bold ml-auto"></span>
         </div>
 
@@ -27,34 +27,28 @@
             <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-end">
                 <div>
                     <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">標的</label>
-                    <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold outline-none">
+                    <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 起始日期 (A)</label>
-                    <input id="dateA" type="date">
-                </div>
+                <div><label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 起始 (A)</label><input id="dateA" type="date"></div>
                 <div class="text-center pb-3 text-slate-600 font-black italic">VS</div>
-                <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 結束日期 (B)</label>
-                    <input id="dateB" type="date">
-                </div>
+                <div><label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 結束 (B)</label><input id="dateB" type="date"></div>
                 <button onclick="startAnalysis()" class="bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black shadow-lg transition active:scale-95">跑分析報表</button>
             </div>
         </div>
 
-        <div class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl">
+        <div class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700">
             <table class="w-full text-left" id="mainTable">
-                <thead class="bg-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                <thead class="bg-slate-700 text-slate-400 text-[10px] font-bold uppercase">
                     <tr>
                         <th class="p-5" onclick="sortRows('name')">標的 / 狀態</th>
                         <th class="p-5 text-right" onclick="sortRows('shareA')">A日股數</th>
                         <th class="p-5 text-right" onclick="sortRows('shareB')">B日股數</th>
                         <th class="p-5 text-right bg-slate-600/30" onclick="sortRows('diff')">股數變動</th>
-                        <th class="p-5 text-right" onclick="sortRows('price')">收盤價</th>
-                        <th class="p-5 text-right text-blue-300" onclick="sortRows('impact')">加減碼金額</th>
+                        <th class="p-5 text-right" onclick="sortRows('price')">B日收盤</th>
+                        <th class="p-5 text-right text-blue-300" onclick="sortRows('impact')">估計加減碼</th>
                     </tr>
                 </thead>
                 <tbody id="resTable" class="text-sm divide-y divide-slate-700/50"></tbody>
@@ -84,13 +78,12 @@
 
         async function startAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
-            const status = document.getElementById('globalStatus');
-            const [rA, rB] = await Promise.all([fetch(`data/${dA}.json`), fetch(`data/${dB}.json`)]);
+            const rA = await fetch(`data/${dA}.json`), rB = await fetch(`data/${dB}.json`);
             
             if(!rA.ok || !rB.ok) {
                 if(!rA.ok) await triggerCrawl(dA);
                 if(!rB.ok) await triggerCrawl(dB);
-                return alert("正在為您補抓數據，請等 2 分鐘後重新整理。");
+                return alert("部分資料缺失，機器人已自動啟動抓取，請等 2 分鐘。");
             }
 
             const dataA = await rA.json(), dataB = await rB.json();
@@ -102,7 +95,10 @@
                 const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                 const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                 const diff = sB.share - sA.share;
-                const price = pricesB[id];
+                
+                // 修正重點：如果價格是 undefined，賦予字串提示
+                const priceRaw = pricesB[id];
+                const price = (priceRaw !== undefined && priceRaw !== 0) ? priceRaw : "補抓中...";
                 const impact = (typeof price === 'number') ? diff * price : 0;
                 
                 let status = "不變", color = "text-slate-500 border-slate-700";
@@ -117,11 +113,7 @@
 
         function sortRows(key, init = false) {
             if(!init) { if(sortState.key === key) sortState.asc = !sortState.asc; else { sortState.key = key; sortState.asc = false; } }
-            currentData.sort((a, b) => {
-                let vA = a[key], vB = b[key];
-                if(typeof vA === 'string' && key === 'price') return 1; // 讓「無資料」排最後
-                return sortState.asc ? (vA > vB ? 1 : -1) : (vB > vA ? 1 : -1);
-            });
+            currentData.sort((a, b) => sortState.asc ? (a[key] > b[key] ? 1 : -1) : (b[key] > a[key] ? 1 : -1));
             
             const keys = ['name', 'shareA', 'shareB', 'diff', 'price', 'impact'];
             document.querySelectorAll('th').forEach((th, i) => {
@@ -136,9 +128,9 @@
                     <td class="p-5 text-right text-slate-400">${row.shareB.toLocaleString()}</td>
                     <td class="p-5 text-right font-black ${row.diff > 0 ? 'text-red-400' : (row.diff < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                         ${row.diff > 0 ? '+' : ''}${row.diff.toLocaleString()}</td>
-                    <td class="p-5 text-right font-bold ${typeof row.price === 'string' ? 'text-red-500 text-[10px]' : 'text-slate-300'}">${row.price}</td>
+                    <td class="p-5 text-right font-bold ${typeof row.price === 'string' ? 'text-yellow-500 text-[10px]' : 'text-slate-300'}">${row.price}</td>
                     <td class="p-5 text-right font-mono font-black ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
-                        ${typeof row.price === 'string' ? '-' : Math.round(row.impact).toLocaleString()}</td>
+                        ${row.impact !== 0 ? Math.round(row.impact).toLocaleString() : '-'}</td>
                 </tr>`).join('');
         }
     </script>
