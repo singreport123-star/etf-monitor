@@ -1,63 +1,78 @@
 import requests
 import json
+import os
 from datetime import datetime
 
-def get_minguo_date():
-    today = datetime.now()
-    # 計算民國年 (2026 -> 115)
-    year = today.year - 1911
-    return f"{year}/{today.strftime('%m/%d')}"
+# 設定目標
+ETFS = [
+    {"name": "00981A", "fundCode": "49YTW", "provider": "unified"},
+    {"name": "00982A", "fundId": "399", "provider": "capital"}
+]
 
-def probe():
-    print("--- [雲端連線診斷 V4：Session 模擬與日期校正] ---")
-    
-    # 建立一個會話 (Session)，它會自動幫我們存取 Cookie
-    session = requests.Session()
-    
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "X-Requested-With": "XMLHttpRequest", # 關鍵：假裝是前端網頁發出的 Ajax 請求
-        "Content-Type": "application/json;charset=UTF-8",
-    }
-
-    # 1. 第一步：先訪問首頁獲取 Session/Cookie
-    print("[1/3] 正在訪問首頁建立 Session...")
-    home_url = "https://www.ezmoney.com.tw/ETF/Transaction/PCF"
-    session.get(home_url, headers=headers, timeout=10)
-
-    # 2. 第二步：發送 API 請求
-    print(f"[2/3] 正在請求 00981A 資料 (日期: {get_minguo_date()})...")
-    api_url = "https://www.ezmoney.com.tw/ETF/Transaction/GetPCF"
-    payload = {
-        "fundCode": "49YTW", # 00981A 的真實代碼
-        "date": get_minguo_date(), 
-        "specificDate": False
-    }
-    
+def get_tw_prices():
+    """抓取上市、上櫃、興櫃當日收盤價"""
+    prices = {}
+    print("--- 正在抓取全市場股價 ---")
     try:
-        res = session.post(api_url, json=payload, headers=headers, timeout=15)
-        print(f"狀態碼: {res.status_code}")
-        
-        # 再次嘗試解析
-        if "<!DOCTYPE" in res.text:
-            print("❌ 失敗：伺服器依然踢回了 HTML 網頁。")
-            print(res.text[:100]) # 印出開頭確認
-        else:
-            data = res.json()
-            stocks = []
-            # 遍歷尋找股票資產
-            for asset_item in data.get('asset', []):
-                if asset_item.get('AssetCode') == 'ST':
-                    stocks = asset_item.get('Details', [])
-                    break
-            print(f"✅ 00981A 成功穿透！抓取到 {len(stocks)} 檔成分股。")
-            
+        # 1. 上市
+        res = requests.get("https://www.twse.com.tw/exchangeReport/STOCK_DAY_ALL?response=json", timeout=15)
+        for row in res.json()['data']:
+            prices[row[0].strip()] = float(row[7].replace(',', '')) if row[7] != 'null' else 0
+        # 2. 上櫃
+        res = requests.get("https://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_quotes_result.php?l=zh-tw&o=json", timeout=15)
+        for row in res.json()['aaData']:
+            prices[row[0].strip()] = float(row[2].replace(',', '')) if row[2] != 'null' else 0
+        # 3. 興櫃 (參考價)
+        res = requests.get("https://www.tpex.org.tw/web/emergingstock/latest_quotes/stk_quotes_result.php?l=zh-tw&o=json", timeout=15)
+        for row in res.json()['aaData']:
+            prices[row[0].strip()] = float(row[2].replace(',', '')) if row[2] != 'null' else 0
+        print(f"✅ 股價抓取完成，共 {len(prices)} 筆標的。")
     except Exception as e:
-        print(f"❌ 請求出錯: {e}")
+        print(f"⚠️ 股價抓取部分失敗: {e}")
+    return prices
 
-    # 3. 00982A 群益 (維持原狀，確保整體不掛掉)
-    print("\n[3/3] 00982A 之前已成功，目前跳過細節...")
+def fetch_unified(fund_code):
+    session = requests.Session()
+    headers = {"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"}
+    # 先拿 Session
+    session.get("https://www.ezmoney.com.tw/ETF/Transaction/PCF", headers=headers)
+    # 民國日期
+    now = datetime.now()
+    m_date = f"{now.year-1911}/{now.strftime('%m/%d')}"
+    api_url = "https://www.ezmoney.com.tw/ETF/Transaction/GetPCF"
+    payload = {"fundCode": fund_code, "date": m_date, "specificDate": False}
+    res = session.post(api_url, json=payload, headers=headers)
+    data = res.json()
+    stocks = []
+    for item in data.get('asset', []):
+        if item.get('AssetCode') == 'ST':
+            for d in item.get('Details', []):
+                stocks.append({"id": d['DetailCode'].strip(), "name": d['DetailName'], "share": d['Share']})
+    return stocks
+
+def fetch_capital(fund_id):
+    url = "https://www.capitalfund.com.tw/CFWeb/api/etf/buyback"
+    res = requests.post(url, json={"fundId": fund_id, "date": None}, headers={"User-Agent": "Mozilla/5.0"})
+    data = res.json()
+    stocks = []
+    for s in data.get('data', {}).get('stocks', []):
+        stocks.append({"id": s['stocNo'].strip(), "name": s['stocName'], "share": s['share']})
+    return stocks
+
+def main():
+    all_data = {"date": datetime.now().strftime("%Y-%m-%d"), "etfs": {}, "market_prices": {}}
+    
+    # 執行抓取
+    all_data["market_prices"] = get_tw_prices()
+    all_data["etfs"]["00981A"] = fetch_unified("49YTW")
+    all_data["etfs"]["00982A"] = fetch_capital("399")
+    
+    # 確保目錄存在並存檔
+    os.makedirs('data', exist_ok=True)
+    file_path = f"data/{all_data['date']}.json"
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(all_data, f, ensure_ascii=False, indent=4)
+    print(f"🎉 數據已成功存檔至: {file_path}")
 
 if __name__ == "__main__":
-    probe()
+    main()
