@@ -2,19 +2,22 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 變動全自動監測站 v4.0</title>
+    <title>ETF 全能監控站 v4.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         input[type="date"] { background: #1e293b; color: white; border: 2px solid #334155; padding: 10px; border-radius: 12px; cursor: pointer; width: 100%; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.5; cursor: pointer; }
+        th { cursor: pointer; user-select: none; position: relative; }
+        .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 5px; }
+        .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
+        .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 股數變動全自動監測站</h1>
+        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 變動全能監測站</h1>
 
         <div class="bg-slate-800 p-4 rounded-xl mb-6 flex gap-4 text-xs items-center border border-slate-700">
-            <span class="text-slate-500 font-bold uppercase">Auth:</span>
             <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-1.5 border border-slate-700 rounded w-32 outline-none">
             <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-1.5 border border-slate-700 rounded w-48 outline-none">
             <span id="globalStatus" class="text-emerald-400 font-bold ml-auto"></span>
@@ -23,19 +26,19 @@
         <div class="bg-slate-800 p-8 rounded-2xl mb-8 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-end">
                 <div>
-                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase tracking-widest">Select ETF</label>
+                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">標的</label>
                     <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold outline-none">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase tracking-widest">📅 Start Date (A)</label>
+                    <label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 起始日期 (A)</label>
                     <input id="dateA" type="date">
                 </div>
                 <div class="text-center pb-3 text-slate-600 font-black italic">VS</div>
                 <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase tracking-widest">📅 End Date (B)</label>
+                    <label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 結束日期 (B)</label>
                     <input id="dateB" type="date">
                 </div>
                 <button onclick="startAnalysis()" class="bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black shadow-lg transition active:scale-95">跑分析報表</button>
@@ -43,39 +46,36 @@
         </div>
 
         <div class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl">
-            <table class="w-full text-left">
+            <table class="w-full text-left" id="mainTable">
                 <thead class="bg-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                     <tr>
-                        <th class="p-5">標的 / 狀態</th>
-                        <th class="p-5 text-right">昨日股數</th>
-                        <th class="p-5 text-right">今日股數</th>
-                        <th class="p-5 text-right bg-slate-600/30">股數變動</th>
-                        <th class="p-5 text-right">收盤價</th>
-                        <th class="p-5 text-right text-blue-300">估計加減碼 (NTD)</th>
+                        <th class="p-5" onclick="sortRows('name')">標的 / 狀態</th>
+                        <th class="p-5 text-right" onclick="sortRows('shareA')">A日股數</th>
+                        <th class="p-5 text-right" onclick="sortRows('shareB')">B日股數</th>
+                        <th class="p-5 text-right bg-slate-600/30" onclick="sortRows('diff')">股數變動</th>
+                        <th class="p-5 text-right" onclick="sortRows('price')">收盤價</th>
+                        <th class="p-5 text-right text-blue-300" onclick="sortRows('impact')">加減碼金額</th>
                     </tr>
                 </thead>
-                <tbody id="resTable" class="text-sm divide-y divide-slate-700/50">
-                    <tr><td colspan="6" class="p-20 text-center text-slate-500 italic">選取任意日期，系統將自動處理採集與比對。</td></tr>
-                </tbody>
+                <tbody id="resTable" class="text-sm divide-y divide-slate-700/50"></tbody>
             </table>
         </div>
     </div>
 
     <script>
         let currentData = [];
+        let sortState = { key: 'impact', asc: false };
 
         window.onload = () => {
             document.getElementById('ghOwner').value = localStorage.getItem('ghOwner') || '';
             document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateB').value = today;
+            fetch('list.json?t='+Date.now()).then(r => r.json()).then(d => { if(d.length > 1) document.getElementById('dateA').value = d[1]; });
         };
 
         async function triggerCrawl(date) {
             const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
-            if(!owner || !token) return alert("系統偵測到缺失資料，請填寫 Auth 資訊以自動採集！");
-            
-            localStorage.setItem('ghOwner', owner); localStorage.setItem('ghToken', token);
             await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { target_date: date } })
@@ -85,25 +85,14 @@
         async function startAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
             const status = document.getElementById('globalStatus');
-            const tbody = document.getElementById('resTable');
-
-            if(!dA || !dB) return alert("日期選齊好嗎？");
-            status.innerText = "🔍 正在檢查雲端數據庫...";
-
             const [rA, rB] = await Promise.all([fetch(`data/${dA}.json`), fetch(`data/${dB}.json`)]);
             
-            let needCrawl = [];
-            if(!rA.ok) needCrawl.push(dA);
-            if(!rB.ok) needCrawl.push(dB);
-
-            if(needCrawl.length > 0) {
-                status.innerText = `⚠️ 缺失 ${needCrawl.join(', ')}，自動啟動採集中...`;
-                for(let d of needCrawl) await triggerCrawl(d);
-                alert(`系統已自動派出機器人抓取：${needCrawl.join(' 和 ')}\n請在 2 分鐘後重新整理網頁按一次報表。`);
-                return;
+            if(!rA.ok || !rB.ok) {
+                if(!rA.ok) await triggerCrawl(dA);
+                if(!rB.ok) await triggerCrawl(dB);
+                return alert("正在為您補抓數據，請等 2 分鐘後重新整理。");
             }
 
-            status.innerText = "✅ 數據完整，正在生成報表...";
             const dataA = await rA.json(), dataB = await rB.json();
             const mapA = Object.fromEntries(dataA.etfs[etf].map(s => [s.id, s]));
             const mapB = Object.fromEntries(dataB.etfs[etf].map(s => [s.id, s]));
@@ -113,29 +102,44 @@
                 const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                 const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                 const diff = sB.share - sA.share;
-                const price = pricesB[id] || 0;
+                const price = pricesB[id];
+                const impact = (typeof price === 'number') ? diff * price : 0;
+                
                 let status = "不變", color = "text-slate-500 border-slate-700";
                 if(sB.share === 0 && sA.share > 0) { status = "出清"; color = "text-red-500 border-red-900 bg-red-950/20"; }
                 else if(diff > 0) { status = "加碼"; color = "text-red-400 border-red-800"; }
                 else if(diff < 0) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
-                return { id, name: sB.name || sA.name, shareA: sA.share, shareB: sB.share, diff, price, impact: diff * price, status, color };
+                
+                return { id, name: sB.name || sA.name, shareA: sA.share, shareB: sB.share, diff, price, impact, status, color };
+            });
+            sortRows(sortState.key, true);
+        }
+
+        function sortRows(key, init = false) {
+            if(!init) { if(sortState.key === key) sortState.asc = !sortState.asc; else { sortState.key = key; sortState.asc = false; } }
+            currentData.sort((a, b) => {
+                let vA = a[key], vB = b[key];
+                if(typeof vA === 'string' && key === 'price') return 1; // 讓「無資料」排最後
+                return sortState.asc ? (vA > vB ? 1 : -1) : (vB > vA ? 1 : -1);
+            });
+            
+            const keys = ['name', 'shareA', 'shareB', 'diff', 'price', 'impact'];
+            document.querySelectorAll('th').forEach((th, i) => {
+                th.classList.toggle('sort-asc', keys[i] === sortState.key && sortState.asc);
+                th.classList.toggle('sort-desc', keys[i] === sortState.key && !sortState.asc);
             });
 
-            currentData.sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
-            
-            tbody.innerHTML = currentData.map(row => `
-                <tr class="hover:bg-slate-700/30 transition-all">
-                    <td class="p-5"><span class="text-[9px] font-mono text-slate-500">${row.id}</span><br><b>${row.name}</b>
-                        <span class="ml-2 text-[10px] px-2 py-0.5 border rounded-full font-black ${row.color}">${row.status}</span></td>
+            document.getElementById('resTable').innerHTML = currentData.map(row => `
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-5"><b>${row.name}</b> <span class="text-[10px] px-2 py-0.5 border rounded-full ${row.color}">${row.status}</span></td>
                     <td class="p-5 text-right text-slate-400">${row.shareA.toLocaleString()}</td>
                     <td class="p-5 text-right text-slate-400">${row.shareB.toLocaleString()}</td>
                     <td class="p-5 text-right font-black ${row.diff > 0 ? 'text-red-400' : (row.diff < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                         ${row.diff > 0 ? '+' : ''}${row.diff.toLocaleString()}</td>
-                    <td class="p-5 text-right font-mono text-slate-300 font-bold">${row.price || '-'}</td>
+                    <td class="p-5 text-right font-bold ${typeof row.price === 'string' ? 'text-red-500 text-[10px]' : 'text-slate-300'}">${row.price}</td>
                     <td class="p-5 text-right font-mono font-black ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
-                        ${Math.round(row.impact).toLocaleString()}</td>
+                        ${typeof row.price === 'string' ? '-' : Math.round(row.impact).toLocaleString()}</td>
                 </tr>`).join('');
-            status.innerText = "✅ 報表生成完畢";
         }
     </script>
 </body>
