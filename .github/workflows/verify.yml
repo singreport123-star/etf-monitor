@@ -1,0 +1,22 @@
+name: 雲端連線診斷探針
+
+on:
+  workflow_dispatch: # 允許手動點擊按鈕啟動
+
+jobs:
+  diagnostic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 複製儲存庫代碼
+        uses: actions/checkout@v4
+
+      - name: 設定 Python 環境
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 安裝必要套件
+        run: pip install requests
+
+      - name: 執行診斷探針
+        run: python crawler.py
