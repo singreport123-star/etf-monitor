@@ -2,86 +2,71 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 持股市值變動 v14.0</title>
+    <title>ETF 市值監測 v15.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .date-input-box {
-            background: #1e293b;
-            color: white;
-            border: 2px solid #3b82f6;
-            padding: 12px;
-            border-radius: 12px;
-            width: 100%;
-            cursor: pointer;
-            font-size: 1.1rem;
-        }
-        input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            scale: 1.4;
-            cursor: pointer;
-        }
-        th { cursor: pointer; user-select: none; position: relative; white-space: nowrap; }
+        .date-input-box { background: #1e293b; color: white; border: 2px solid #3b82f6; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 1.2rem; font-weight: 800; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.5; cursor: pointer; }
+        th { cursor: pointer; user-select: none; position: relative; white-space: nowrap; font-size: 0.9rem; padding: 1.5rem 1rem !important; }
         .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 6px; }
         .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
-        /* 放大表格文字 */
-        tbody tr td { font-size: 1.05rem; padding: 1.25rem 1rem !important; }
+        /* 大字體設定 */
+        tbody tr td { font-size: 1.2rem; padding: 1.8rem 1rem !important; }
+        .font-impact { font-family: 'JetBrains Mono', 'Courier New', monospace; font-weight: 900; }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 p-4 md:p-8">
-    <div class="max-w-[1600px] mx-auto">
-        <h1 class="text-4xl font-black mb-10 text-blue-400 tracking-tighter">📊 ETF 持股市值變動分析儀</h1>
+<body class="bg-slate-900 text-slate-100 p-4 md:p-10">
+    <div class="max-w-[1700px] mx-auto">
+        <h1 class="text-5xl font-black mb-10 text-blue-400 tracking-tighter">📊 ETF 市值變動精準分析</h1>
 
-        <div class="bg-slate-800 p-5 rounded-2xl mb-8 flex gap-6 border border-slate-700 shadow-xl items-center">
-            <input id="ghOwner" type="text" placeholder="GitHub 帳號" class="bg-slate-900 p-3 border border-slate-700 rounded-xl w-48 outline-none focus:border-blue-500">
-            <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-3 border border-slate-700 rounded-xl w-72 outline-none focus:border-blue-500">
-            <div id="diagStatus" class="ml-auto font-mono text-emerald-400 font-bold uppercase tracking-widest text-sm">System Ready</div>
+        <div class="bg-slate-800 p-6 rounded-2xl mb-8 flex gap-6 border border-slate-700 shadow-xl items-center">
+            <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-3 border border-slate-700 rounded-xl w-48 outline-none focus:border-blue-500">
+            <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-3 border border-slate-700 rounded-xl w-80 outline-none focus:border-blue-500">
+            <div id="diagStatus" class="ml-auto font-mono text-emerald-400 font-bold uppercase tracking-widest text-sm">System Live</div>
         </div>
 
-        <div class="bg-slate-800 p-10 rounded-3xl mb-10 border border-slate-700 shadow-2xl">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-end">
+        <div class="bg-slate-800 p-12 rounded-[2.5rem] mb-10 border border-slate-700 shadow-2xl">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-end">
                 <div class="md:col-span-3">
-                    <label class="block text-xs text-slate-500 mb-3 font-bold uppercase tracking-widest">Select ETF</label>
-                    <select id="etfId" class="bg-slate-900 p-4 rounded-xl border border-slate-700 w-full font-black text-lg outline-none focus:border-blue-500">
+                    <label class="block text-xs text-slate-500 mb-4 font-bold uppercase tracking-widest">Select Target ETF</label>
+                    <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border border-slate-700 w-full font-black text-2xl outline-none focus:border-blue-500">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
                 <div class="md:col-span-3">
-                    <label class="block text-xs text-blue-400 mb-3 font-bold uppercase">📅 起始 A (舊)</label>
+                    <label class="block text-xs text-blue-400 mb-4 font-bold uppercase">📅 Date A (舊日期)</label>
                     <input id="dateA" type="date" class="date-input-box">
                 </div>
-                <div class="md:col-span-1 text-center pb-4 text-slate-600 font-black italic text-2xl">VS</div>
+                <div class="md:col-span-1 text-center pb-6 text-slate-600 font-black italic text-4xl">VS</div>
                 <div class="md:col-span-3">
-                    <label class="block text-xs text-blue-400 mb-3 font-bold uppercase">📅 結束 B (新)</label>
+                    <label class="block text-xs text-blue-400 mb-4 font-bold uppercase">📅 Date B (新日期)</label>
                     <input id="dateB" type="date" class="date-input-box">
                 </div>
                 <div class="md:col-span-2">
-                    <button onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl font-black text-lg shadow-lg transition active:scale-95 transform">跑分析報表</button>
+                    <button onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-2xl font-black text-2xl shadow-lg transition active:scale-95">跑報表</button>
                 </div>
             </div>
         </div>
 
-        <div class="bg-slate-800 rounded-[2rem] overflow-hidden border border-slate-700 shadow-2xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left" id="mainTable">
-                    <thead class="bg-slate-700 text-slate-300 text-xs font-bold uppercase tracking-tighter">
-                        <tr>
-                            <th class="p-6 sort-icon" onclick="handleSort('name')">標的</th>
-                            <th class="p-6 sort-icon" onclick="handleSort('status')">異動狀態</th>
-                            <th class="p-6 text-right sort-icon" onclick="handleSort('shareA')">A日股數</th>
-                            <th class="p-6 text-right sort-icon" onclick="handleSort('pA')">A日股價</th>
-                            <th class="p-6 text-right sort-icon" onclick="handleSort('valA')">A日市值</th>
-                            <th class="p-6 text-right sort-icon" onclick="handleSort('shareB')">B日股數</th>
-                            <th class="p-6 text-right sort-icon" onclick="handleSort('pB')">B日股價</th>
-                            <th class="p-6 text-right sort-icon" onclick="handleSort('valB')">B日市值</th>
-                            <th class="p-6 text-right bg-slate-600/30 sort-icon" onclick="handleSort('impact')">加減碼金額</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resTable" class="divide-y divide-slate-700/50">
-                        </tbody>
-                </table>
-            </div>
+        <div class="bg-slate-800 rounded-[3rem] overflow-hidden border border-slate-700 shadow-2xl">
+            <table class="w-full text-left" id="mainTable">
+                <thead class="bg-slate-700 text-slate-400 font-black uppercase">
+                    <tr>
+                        <th class="p-6 sort-icon" onclick="handleSort('name')">標的</th>
+                        <th class="p-6 sort-icon" onclick="handleSort('status')">異動狀態</th>
+                        <th class="p-6 text-right sort-icon" onclick="handleSort('shareA')">A日股數</th>
+                        <th class="p-6 text-right sort-icon" onclick="handleSort('pA')">A日股價</th>
+                        <th class="p-6 text-right sort-icon" onclick="handleSort('valA')">A日市值</th>
+                        <th class="p-6 text-right sort-icon" onclick="handleSort('shareB')">B日股數</th>
+                        <th class="p-6 text-right sort-icon" onclick="handleSort('pB')">B日股價</th>
+                        <th class="p-6 text-right sort-icon" onclick="handleSort('valB')">B日市值</th>
+                        <th class="p-6 text-right bg-slate-600/40 sort-icon text-blue-300" onclick="handleSort('impact')">加減碼金額</th>
+                    </tr>
+                </thead>
+                <tbody id="resTable" class="divide-y divide-slate-700/50"></tbody>
+            </table>
         </div>
     </div>
 
@@ -114,11 +99,11 @@
             if(!rA.ok || !rB.ok) {
                 if(!rA.ok) await triggerAction(dA);
                 if(!rB.ok) await triggerAction(dB);
-                return alert("部分資料尚在補齊中，請等 2 分鐘機器人跑完再按一次。");
+                return alert("群益 API 救援中，請等 2 分鐘再按一次。");
             }
             const jsonA = await rA.json(), jsonB = await rB.json();
-            const mapA = Object.fromEntries(jsonA.etfs[etf].map(s => [s.id, s]));
-            const mapB = Object.fromEntries(jsonB.etfs[etf].map(s => [s.id, s]));
+            const mapA = Object.fromEntries((jsonA.etfs[etf] || []).map(s => [s.id, s]));
+            const mapB = Object.fromEntries((jsonB.etfs[etf] || []).map(s => [s.id, s]));
             const pricesA = jsonA.market_prices || {}, pricesB = jsonB.market_prices || {};
             
             currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
@@ -126,13 +111,11 @@
                 const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                 const pA = Number(pricesA[id]) || 0, pB = Number(pricesB[id]) || 0;
                 const valA = sA.share * pA, valB = sB.share * pB, impact = valB - valA;
-                
                 let status = "持平", color = "text-slate-500 border-slate-700";
-                if(sA.share === 0 && sB.share > 0) { status = "新進"; color = "text-yellow-400 border-yellow-900"; }
+                if(sA.share === 0 && sB.share > 0) { status = "新進"; color = "text-yellow-400 border-yellow-800"; }
                 else if(sB.share === 0 && sA.share > 0) { status = "出清"; color = "text-red-500 border-red-900 bg-red-950/20"; }
                 else if(sB.share > sA.share) { status = "加碼"; color = "text-red-400 border-red-800"; }
                 else if(sB.share < sA.share) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
-                
                 return { id, name: (sB.name || sA.name || '未知'), status, shareA: sA.share, pA, valA, shareB: sB.share, pB, valB, impact, color };
             });
             renderTable();
@@ -152,16 +135,16 @@
                 if(keys[i] === sortState.key) th.classList.add(sortState.asc ? 'sort-asc' : 'sort-desc');
             });
             document.getElementById('resTable').innerHTML = currentData.map(row => `
-                <tr class="hover:bg-slate-700/30 transition-all">
-                    <td class="p-6"><b>${row.name}</b> <br><span class="text-[10px] font-mono text-slate-500">${row.id}</span></td>
-                    <td class="p-6"><span class="px-3 py-1 border rounded-full font-black text-xs ${row.color}">${row.status}</span></td>
-                    <td class="p-6 text-right text-slate-400">${row.shareA.toLocaleString()}</td>
-                    <td class="p-6 text-right text-slate-500 font-medium">${row.pA || '-'}</td>
+                <tr class="hover:bg-slate-700/30">
+                    <td class="p-6"><b>${row.name}</b> <br><span class="text-sm font-mono text-slate-500">${row.id}</span></td>
+                    <td class="p-6"><span class="px-5 py-2 border rounded-full font-black text-sm ${row.color}">${row.status}</span></td>
+                    <td class="p-6 text-right text-slate-400 font-medium">${row.shareA.toLocaleString()}</td>
+                    <td class="p-6 text-right text-slate-500">${row.pA || '-'}</td>
                     <td class="p-6 text-right text-slate-400">${Math.round(row.valA).toLocaleString()}</td>
-                    <td class="p-6 text-right text-slate-300 font-bold">${row.shareB.toLocaleString()}</td>
-                    <td class="p-6 text-right text-blue-300 font-bold">${row.pB || '-'}</td>
-                    <td class="p-6 text-right text-slate-200 font-black">${Math.round(row.valB).toLocaleString()}</td>
-                    <td class="p-6 text-right font-mono font-black ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
+                    <td class="p-6 text-right text-slate-100 font-bold">${row.shareB.toLocaleString()}</td>
+                    <td class="p-6 text-right text-blue-300 font-black">${row.pB || '-'}</td>
+                    <td class="p-6 text-right text-white font-black">${Math.round(row.valB).toLocaleString()}</td>
+                    <td class="p-6 text-right font-impact text-2xl ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                         ${row.impact > 0 ? '+' : ''}${Math.round(row.impact).toLocaleString()}</td>
                 </tr>`).join('');
         }
