@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>ETF 加減碼動態監測站</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-blue-400">📊 ETF 加減碼比對儀表板</h1>
+        
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl mb-8 flex flex-wrap gap-6 items-end">
+            <div>
+                <label class="block text-sm mb-2 text-gray-400">選擇 ETF</label>
+                <select id="etfSelect" class="bg-gray-700 border border-gray-600 rounded px-4 py-2">
+                    <option value="00981A">00981A (統一)</option>
+                    <option value="00982A">00982A (群益)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm mb-2 text-gray-400">日期 A (起始日)</label>
+                <select id="dateA" class="bg-gray-700 border border-gray-600 rounded px-4 py-2 w-40"></select>
+            </div>
+            <div class="text-2xl text-gray-500 pb-1">VS</div>
+            <div>
+                <label class="block text-sm mb-2 text-gray-400">日期 B (基準日/較新)</label>
+                <select id="dateB" class="bg-gray-700 border border-gray-600 rounded px-4 py-2 w-40"></select>
+            </div>
+            <button onclick="calculate()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-8 rounded transition">立即比對</button>
+        </div>
+
+        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+            <table class="w-full text-left">
+                <thead class="bg-gray-700 text-gray-300 uppercase text-sm">
+                    <tr>
+                        <th class="p-4">代號</th>
+                        <th class="p-4">名稱</th>
+                        <th class="p-4 text-right">A日股數</th>
+                        <th class="p-4 text-right">B日股數</th>
+                        <th class="p-4 text-right">變動量</th>
+                        <th class="p-4 text-right">B日股價</th>
+                        <th class="p-4 text-right text-blue-300">預估加減碼(NTD)</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody">
+                    <tr><td colspan="7" class="p-8 text-center text-gray-500">請選取日期並點擊比對</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 初始化載入日期清單
+        fetch('list.json').then(r => r.json()).then(dates => {
+            const selects = [document.getElementById('dateA'), document.getElementById('dateB')];
+            dates.sort().reverse().forEach(d => {
+                selects.forEach(s => {
+                    const opt = new Option(d, d);
+                    s.add(opt);
+                });
+            });
+            // 預設日期 B 為最新，日期 A 為次新
+            if(dates.length > 1) document.getElementById('dateA').selectedIndex = 1;
+        });
+
+        async function calculate() {
+            const etf = document.getElementById('etfSelect').value;
+            const dA = document.getElementById('dateA').value;
+            const dB = document.getElementById('dateB').value;
+            const tbody = document.getElementById('resultBody');
+            
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center">計算中...</td></tr>';
+
+            const [resA, resB] = await Promise.all([
+                fetch(`data/${dA}.json`).then(r => r.json()),
+                fetch(`data/${dB}.json`).then(r => r.json())
+            ]);
+
+            const stocksA = resA.etfs[etf] || [];
+            const stocksB = resB.etfs[etf] || [];
+            const pricesB = resB.market_prices || {};
+
+            // 建立 Full Outer Join 映射
+            const allIds = new Set([...stocksA.map(s => s.id), ...stocksB.map(s => s.id)]);
+            const mapA = Object.fromEntries(stocksA.map(s => [s.id, s]));
+            const mapB = Object.fromEntries(stocksB.map(s => [s.id, s]));
+
+            let html = '';
+            let totalImpact = 0;
+
+            Array.from(allIds).forEach(id => {
+                const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
+                const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
+                const diff = sB.share - sA.share;
+                const price = pricesB[id] || 0;
+                const impact = diff * price;
+                totalImpact += impact;
+
+                if (diff !== 0) {
+                    html += `
+                    <tr class="border-t border-gray-700 hover:bg-gray-750 transition">
+                        <td class="p-4">${id}</td>
+                        <td class="p-4 font-medium">${sB.name || '未知'}</td>
+                        <td class="p-4 text-right text-gray-400">${sA.share.toLocaleString()}</td>
+                        <td class="p-4 text-right text-gray-400">${sB.share.toLocaleString()}</td>
+                        <td class="p-4 text-right font-bold ${diff > 0 ? 'text-red-400' : 'text-green-400'}">
+                            ${diff > 0 ? '+' : ''}${diff.toLocaleString()}
+                        </td>
+                        <td class="p-4 text-right">${price || '-'}</td>
+                        <td class="p-4 text-right font-mono font-bold ${impact > 0 ? 'text-red-400' : 'text-green-400'}">
+                            ${Math.round(impact).toLocaleString()}
+                        </td>
+                    </tr>`;
+                }
+            });
+
+            tbody.innerHTML = html || '<tr><td colspan="7" class="p-8 text-center text-gray-500">此區間無持股變動</td></tr>';
+        }
+    </script>
+</body>
+</html>
