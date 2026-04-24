@@ -22,19 +22,19 @@ jobs:
       - name: 執行批量採集
         run: |
           DAYS=${{ github.event.inputs.days }}
-          echo "🚀 準備補抓過去 $DAYS 天的數據..."
+          echo "🚀 啟動批量餵食，目標天數: $DAYS 天"
           
           # 從 0 開始回溯到 DAYS-1
           for i in $(seq 0 $((DAYS-1))); do
             export TARGET_DATE=$(date -d "$i days ago" +%Y-%m-%d)
-            echo "--- 📅 處理日期: $TARGET_DATE ---"
+            echo "--- 📅 正在採集日期: $TARGET_DATE ---"
             python crawler.py
           done
 
-      - name: 提交並存檔
+      - name: 數據存檔回 GitHub
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
           git add data/
-          git commit -m "Manual Batch Feeding: $DAYS days" || exit 0
+          git commit -m "Manual Feeding: $DAYS days batch update" || exit 0
           git push
