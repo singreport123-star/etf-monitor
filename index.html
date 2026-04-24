@@ -2,31 +2,31 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 股數變動全功能監控站 v5.0</title>
+    <title>ETF 加減碼監控站 v6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         input[type="date"] { background: #1e293b; color: white; border: 2px solid #334155; padding: 10px; border-radius: 12px; cursor: pointer; width: 100%; }
-        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.5; cursor: pointer; }
-        th { cursor: pointer; user-select: none; position: relative; }
-        .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 5px; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.2; cursor: pointer; }
+        th { cursor: pointer; position: relative; user-select: none; }
+        .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 4px; }
         .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 p-4 md:p-8 font-sans">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 變動全方位監控站</h1>
+        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 持股異動深度監測</h1>
 
-        <div class="bg-slate-800 p-4 rounded-xl mb-6 flex gap-4 text-xs items-center border border-slate-700">
-            <input id="ghOwner" type="text" placeholder="GitHub 帳號" class="bg-slate-900 p-2 border border-slate-700 rounded w-40 outline-none">
+        <div class="bg-slate-800 p-4 rounded-xl mb-6 flex gap-4 text-xs items-center border border-slate-700 shadow-xl">
+            <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-2 border border-slate-700 rounded w-40 outline-none">
             <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-2 border border-slate-700 rounded w-60 outline-none">
-            <span id="diagStatus" class="ml-auto font-bold text-emerald-400">系統就緒</span>
+            <div id="diagStatus" class="ml-auto font-mono text-emerald-400 font-bold">系統就緒</div>
         </div>
 
         <div class="bg-slate-800 p-8 rounded-2xl mb-8 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-end">
                 <div>
-                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">標的</label>
+                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">選擇標的</label>
                     <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
@@ -43,12 +43,13 @@
             <table class="w-full text-left" id="mainTable">
                 <thead class="bg-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                     <tr>
-                        <th class="p-5 sort-icon" onclick="handleSort('name')">標的 / 狀態</th>
+                        <th class="p-5 sort-icon" onclick="handleSort('name')">標的名</th>
+                        <th class="p-5 sort-icon" onclick="handleSort('status')">異動狀態</th>
                         <th class="p-5 text-right sort-icon" onclick="handleSort('shareA')">A日股數</th>
                         <th class="p-5 text-right sort-icon" onclick="handleSort('shareB')">B日股數</th>
                         <th class="p-5 text-right bg-slate-600/30 sort-icon" onclick="handleSort('diff')">股數變動</th>
-                        <th class="p-5 text-right sort-icon" onclick="handleSort('price')">收盤價</th>
-                        <th class="p-5 text-right text-blue-300 sort-icon" onclick="handleSort('impact')">估計加減碼</th>
+                        <th class="p-5 text-right sort-icon" onclick="handleSort('price')">B日收盤價</th>
+                        <th class="p-5 text-right text-blue-300 sort-icon" onclick="handleSort('impact')">估計加減碼金額</th>
                     </tr>
                 </thead>
                 <tbody id="resTable" class="text-sm divide-y divide-slate-700/50"></tbody>
@@ -68,8 +69,9 @@
             fetch('list.json?t='+Date.now()).then(r => r.json()).then(d => { if(d.length > 1) document.getElementById('dateA').value = d[1]; });
         };
 
-        async function triggerCrawl(date) {
+        async function triggerAction(date) {
             const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
+            localStorage.setItem('ghOwner', owner); localStorage.setItem('ghToken', token);
             await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { target_date: date } })
@@ -81,9 +83,9 @@
             const rA = await fetch(`data/${dA}.json`), rB = await fetch(`data/${dB}.json`);
             
             if(!rA.ok || !rB.ok) {
-                if(!rA.ok) await triggerCrawl(dA);
-                if(!rB.ok) await triggerCrawl(dB);
-                return alert("正在為您補抓數據，請等 2 分鐘後重新整理。");
+                if(!rA.ok) await triggerAction(dA);
+                if(!rB.ok) await triggerAction(dB);
+                return alert("資料正在補抓，請稍等 2 分鐘。");
             }
 
             const dataA = await rA.json(), dataB = await rB.json();
@@ -95,10 +97,7 @@
                 const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                 const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                 const diff = sB.share - sA.share;
-                
-                let price = pricesB[id];
-                if (price === undefined || price === 0) price = "Yahoo無資料";
-                
+                const price = pricesB[id] !== undefined ? pricesB[id] : "無價格";
                 const impact = (typeof price === 'number') ? diff * price : 0;
                 
                 let status = "不變", color = "text-slate-500 border-slate-700";
@@ -106,7 +105,7 @@
                 else if(diff > 0) { status = "加碼"; color = "text-red-400 border-red-800"; }
                 else if(diff < 0) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
                 
-                return { id, name: (sB.name || sA.name || '未知標的'), shareA: sA.share, shareB: sB.share, diff, price, impact, status, color };
+                return { id, name: (sB.name || sA.name || '未知標的'), status, shareA: sA.share, shareB: sB.share, diff, price, impact, color };
             });
             renderTable();
         }
@@ -120,20 +119,21 @@
         function renderTable() {
             currentData.sort((a, b) => {
                 let vA = a[sortState.key], vB = b[sortState.key];
-                if(vA === "Yahoo無資料") return 1;
-                if(vB === "Yahoo無資料") return -1;
+                if(vA === "無價格") return 1;
+                if(vB === "無價格") return -1;
                 return sortState.asc ? (vA > vB ? 1 : -1) : (vB > vA ? 1 : -1);
             });
 
-            const keys = ['name', 'shareA', 'shareB', 'diff', 'price', 'impact'];
+            const keys = ['name', 'status', 'shareA', 'shareB', 'diff', 'price', 'impact'];
             document.querySelectorAll('th').forEach((th, i) => {
-                th.classList.remove('sort-asc', 'sort-desc');
-                if(keys[i] === sortState.key) th.classList.add(sortState.asc ? 'sort-asc' : 'sort-desc');
+                th.classList.toggle('sort-asc', keys[i] === sortState.key && sortState.asc);
+                th.classList.toggle('sort-desc', keys[i] === sortState.key && !sortState.asc);
             });
 
             document.getElementById('resTable').innerHTML = currentData.map(row => `
-                <tr class="hover:bg-slate-700/40 transition-colors">
-                    <td class="p-5"><b>${row.name}</b> <span class="text-[10px] px-2 py-0.5 border rounded-full font-black ${row.color}">${row.status}</span></td>
+                <tr class="hover:bg-slate-700/30 transition-all">
+                    <td class="p-5"><b>${row.name}</b> <br><span class="text-[9px] font-mono text-slate-500">${row.id}</span></td>
+                    <td class="p-5"><span class="text-[10px] px-2 py-0.5 border rounded-full font-black ${row.color}">${row.status}</span></td>
                     <td class="p-5 text-right text-slate-400">${row.shareA.toLocaleString()}</td>
                     <td class="p-5 text-right text-slate-400">${row.shareB.toLocaleString()}</td>
                     <td class="p-5 text-right font-black ${row.diff > 0 ? 'text-red-400' : (row.diff < 0 ? 'text-emerald-400' : 'text-slate-500')}">
