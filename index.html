@@ -2,20 +2,20 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 持股市值監測 v18.1</title>
+    <title>ETF 市值變動監測 v18.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.3rem; font-weight: 900; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.6; cursor: pointer; }
-        th { white-space: nowrap; font-size: 0.9rem; padding: 1.5rem 1rem !important; cursor: pointer; letter-spacing: 1px; }
+        th { white-space: nowrap; font-size: 0.9rem; padding: 1.5rem 1rem !important; cursor: pointer; }
         /* 數據欄位字體極致放大 */
-        tbody tr td { font-size: 1.3rem; padding: 2.2rem 1rem !important; }
+        tbody tr td { font-size: 1.35rem; padding: 2.2rem 1rem !important; }
         .font-num { font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 800; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 p-8">
     <div class="max-w-[1900px] mx-auto">
-        <h1 class="text-6xl font-black mb-12 text-blue-400 tracking-tighter">📊 ETF 持股市值變動分析 (v18.1)</h1>
+        <h1 class="text-6xl font-black mb-12 text-blue-400 tracking-tighter italic text-center md:text-left">PORTFOLIO ANALYZER</h1>
 
         <div class="bg-slate-800 p-12 rounded-[3rem] mb-12 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-end">
@@ -27,12 +27,12 @@
                     </select>
                 </div>
                 <div class="md:col-span-3">
-                    <label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 起始 A (舊日期)</label>
+                    <label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 起始 A (舊)</label>
                     <input id="dateA" type="date" class="date-input w-full">
                 </div>
                 <div class="md:col-span-1 text-center pb-6 text-slate-600 font-black italic text-5xl">VS</div>
                 <div class="md:col-span-3">
-                    <label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 結束 B (新日期)</label>
+                    <label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 結束 B (新)</label>
                     <input id="dateB" type="date" class="date-input w-full">
                 </div>
                 <div class="md:col-span-2">
@@ -42,22 +42,24 @@
         </div>
 
         <div class="bg-slate-800 rounded-[3.5rem] overflow-hidden border border-slate-700 shadow-2xl">
-            <table class="w-full text-left" id="mainTable">
-                <thead class="bg-slate-700 text-slate-300 font-black uppercase tracking-widest">
-                    <tr>
-                        <th class="p-8">標的</th>
-                        <th>異動狀態</th>
-                        <th class="text-right">A日股價</th>
-                        <th class="text-right">A日股數</th>
-                        <th class="text-right text-slate-400">A日市值</th>
-                        <th class="text-right text-blue-300">B日股價</th>
-                        <th class="text-right">B日股數</th>
-                        <th class="text-right text-white">B日市值</th>
-                        <th class="text-right bg-slate-600/40 text-yellow-400 text-3xl">加減碼金額</th>
-                    </tr>
-                </thead>
-                <tbody id="resTable" class="divide-y divide-slate-700/50"></tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left" id="mainTable">
+                    <thead class="bg-slate-700 text-slate-300 font-black uppercase tracking-widest">
+                        <tr>
+                            <th class="p-8">標的</th>
+                            <th>異動狀態</th>
+                            <th class="text-right">A日股價</th>
+                            <th class="text-right">A日股數</th>
+                            <th class="text-right text-slate-400">A日市值</th>
+                            <th class="text-right text-blue-300">B日股價</th>
+                            <th class="text-right">B日股數</th>
+                            <th class="text-right text-white">B日市值</th>
+                            <th class="text-right bg-slate-600/40 text-yellow-400 text-3xl">加減碼金額</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resTable" class="divide-y divide-slate-700/50"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -65,10 +67,9 @@
         async function runAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
             try {
-                // 資料分家路徑：data/ETF_ID/DATE.json
+                // 資料分家路徑：data/00981A/YYYY-MM-DD.json
                 const [rA, rB] = await Promise.all([fetch(`data/${etf}/${dA}.json`), fetch(`data/${etf}/${dB}.json`)]);
                 if(!rA.ok || !rB.ok) {
-                    // 自動補件邏輯
                     const owner = localStorage.getItem('ghOwner'), token = localStorage.getItem('ghToken');
                     const trigger = async (d) => await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
                         method: 'POST', headers: { 'Authorization': `Bearer ${token}` },
@@ -76,7 +77,7 @@
                     });
                     if(!rA.ok) await trigger(dA);
                     if(!rB.ok) await trigger(dB);
-                    return alert(`⚠️ 檔案尚未生成於 data/${etf}/ 資料夾下。機器人已啟動，請等 2 分鐘。`);
+                    return alert("資料夾內尚無檔案，已啟動機器人補件中，請等 2 分鐘。");
                 }
                 
                 const jsonA = await rA.json(), jsonB = await rB.json();
@@ -90,20 +91,19 @@
                     const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
                     const valA = sA.share * pA, valB = sB.share * pB, impact = valB - valA;
                     
-                    let status = "持平", color = "text-slate-500 border-slate-700";
-                    if(sA.share === 0) { status = "新進"; color = "text-yellow-400 border-yellow-900"; }
-                    else if(sB.share === 0) { status = "出清"; color = "text-red-500 border-red-900 bg-red-950/20"; }
-                    else if(sB.share > sA.share) { status = "加碼"; color = "text-red-400 border-red-800"; }
-                    else if(sB.share < sA.share) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
+                    let status = "持平", color = "text-slate-500";
+                    if(sA.share === 0) { status = "新進"; color = "text-yellow-400"; }
+                    else if(sB.share === 0) { status = "出清"; color = "text-red-500"; }
+                    else if(sB.share > sA.share) { status = "加碼"; color = "text-red-400"; }
+                    else if(sB.share < sA.share) { status = "減碼"; color = "text-emerald-400"; }
                     
                     return { id, name: sB.name || sA.name, status, color, pA, shareA: sA.share, valA, pB, shareB: sB.share, valB, impact };
                 });
 
                 combined.sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
-                
                 document.getElementById('resTable').innerHTML = combined.map(row => `
-                    <tr class="hover:bg-slate-700/30 transition-all">
-                        <td class="p-8"><b>${row.name}</b><br><span class="text-sm font-mono text-slate-500">${row.id}</span></td>
+                    <tr class="hover:bg-slate-700/30">
+                        <td class="p-8"><b>${row.name}</b><br><span class="text-xs font-mono text-slate-500">${row.id}</span></td>
                         <td><span class="px-5 py-2 border rounded-full font-black text-sm ${row.color}">${row.status}</span></td>
                         <td class="text-right font-num text-slate-500">${row.pA || '-'}</td>
                         <td class="text-right font-num text-slate-400">${row.shareA.toLocaleString()}</td>
@@ -114,7 +114,7 @@
                         <td class="text-right font-num text-4xl ${row.impact > 0 ? 'text-red-400' : (row.impact < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                             ${row.impact > 0 ? '+' : ''}${Math.round(row.impact).toLocaleString()}</td>
                     </tr>`).join('');
-            } catch (e) { alert("分析錯誤：請確認該 ETF 已有歷史資料。"); }
+            } catch (e) { alert("分析錯誤：請確認該 ETF 的資料夾已有 JSON 檔案。"); }
         }
     </script>
 </body>
