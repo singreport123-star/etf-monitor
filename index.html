@@ -2,10 +2,13 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 變動全自動監控站 v3.3</title>
+    <title>ETF 變動監測站 v3.4 - 自動診斷版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        input[type="date"] { background: #1e293b; color: white; border: 2px solid #334155; padding: 10px; border-radius: 10px; cursor: pointer; width: 100%; }
+        input[type="date"] {
+            background-color: #1e293b; color: white; border: 2px solid #334155;
+            padding: 10px; border-radius: 12px; width: 100%; cursor: pointer;
+        }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.5; cursor: pointer; }
         th { cursor: pointer; }
         .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 5px; }
@@ -13,51 +16,51 @@
 </head>
 <body class="bg-slate-900 text-slate-100 p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-black mb-8 text-blue-400 italic">AUTOMATED ETF MONITORING</h1>
+        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 持股變動與數據診斷</h1>
 
-        <div class="bg-slate-800 p-4 rounded-xl mb-6 flex gap-4 text-xs items-center">
-            <span class="text-slate-500 font-bold uppercase">Settings:</span>
-            <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-1 border border-slate-700 rounded w-24">
-            <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-1 border border-slate-700 rounded w-40">
+        <div class="bg-slate-800 p-4 rounded-xl mb-6 flex gap-4 text-xs items-center border border-slate-700">
+            <span class="text-slate-500 font-bold uppercase">Auth:</span>
+            <input id="ghOwner" type="text" placeholder="帳號" class="bg-slate-900 p-1.5 border border-slate-700 rounded w-32">
+            <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-1.5 border border-slate-700 rounded w-48">
             <span id="autoStatus" class="text-emerald-400 font-bold"></span>
         </div>
 
         <div class="bg-slate-800 p-8 rounded-2xl mb-8 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-end">
                 <div>
-                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">Select ETF</label>
+                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">選擇 ETF</label>
                     <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase">📅 Start Date (A)</label>
-                    <input id="dateA" type="date" onchange="autoCheck(this.value)">
+                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase">📅 起始日期 (A)</label>
+                    <input id="dateA" type="date">
                 </div>
-                <div class="text-center pb-3 text-slate-600 font-black">TO</div>
+                <div class="text-center pb-3 text-slate-600 font-black italic">VS</div>
                 <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase">📅 End Date (B)</label>
-                    <input id="dateB" type="date" onchange="autoCheck(this.value)">
+                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase">📅 結束日期 (B)</label>
+                    <input id="dateB" type="date">
                 </div>
                 <button onclick="compareData()" class="bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-black shadow-lg transition active:scale-95">跑分析報表</button>
             </div>
         </div>
 
         <div class="bg-slate-800 rounded-3xl overflow-hidden border border-slate-700 shadow-2xl">
-            <table class="w-full text-left">
+            <table class="w-full text-left" id="mainTable">
                 <thead class="bg-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                     <tr>
-                        <th class="p-5" onclick="sortRows('name')">標的 / 狀態</th>
-                        <th class="p-5 text-right" onclick="sortRows('shareA')">A日股數</th>
-                        <th class="p-5 text-right" onclick="sortRows('shareB')">B日股數</th>
-                        <th class="p-5 text-right bg-slate-600/30" onclick="sortRows('diff')">股數變動</th>
-                        <th class="p-5 text-right" onclick="sortRows('price')">B日收盤</th>
-                        <th class="p-5 text-right text-blue-400" onclick="sortRows('impact')">估計加減碼</th>
+                        <th class="p-5 sort-icon" onclick="sortRows('name')">標的 / 狀態</th>
+                        <th class="p-5 text-right sort-icon" onclick="sortRows('shareA')">A日股數</th>
+                        <th class="p-5 text-right sort-icon" onclick="sortRows('shareB')">B日股數</th>
+                        <th class="p-5 text-right bg-slate-600/20 sort-icon" onclick="sortRows('diff')">股數變動</th>
+                        <th class="p-5 text-right sort-icon" onclick="sortRows('price')">B日收盤</th>
+                        <th class="p-5 text-right text-blue-300 sort-icon" onclick="sortRows('impact')">估計加減碼</th>
                     </tr>
                 </thead>
                 <tbody id="resTable" class="text-sm divide-y divide-slate-700/50">
-                    <tr><td colspan="6" class="p-20 text-center text-slate-600 italic">選取日期後，若無資料系統將自動採集。</td></tr>
+                    <tr><td colspan="6" class="p-20 text-center text-slate-500 italic">選取日期後按「跑分析報表」。</td></tr>
                 </tbody>
             </table>
         </div>
@@ -72,65 +75,62 @@
             document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('dateB').value = today;
+            
+            fetch('list.json?t=' + Date.now()).then(r => r.json()).then(dates => {
+                if(dates.length > 1) document.getElementById('dateA').value = dates[1];
+            }).catch(e => console.log("歡迎初次使用"));
         };
 
-        // 自動檢查資料是否存在，不存在就幫你啟動機器人
-        async function autoCheck(date) {
-            if(!date) return;
-            const status = document.getElementById('autoStatus');
-            status.innerText = "🔍 檢查數據中...";
+        async function triggerRepair(date) {
+            const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
+            if(!owner || !token) return alert("請填寫 Auth 資訊以啟動修復。");
             
-            try {
-                const res = await fetch(`data/${date}.json`);
-                if(res.ok) {
-                    status.innerText = "✅ 數據已就緒";
-                } else {
-                    status.innerText = "⚠️ 沒資料，自動啟動雲端補件...";
-                    triggerAction(date);
-                }
-            } catch(e) { console.log("檢查失敗"); }
-        }
-
-        async function triggerAction(date) {
-            const owner = document.getElementById('ghOwner').value;
-            const token = document.getElementById('ghToken').value;
-            if(!owner || !token) return alert("請先填入帳號與 Token 才能自動補件！");
-            
-            localStorage.setItem('ghOwner', owner);
-            localStorage.setItem('ghToken', token);
-
+            document.getElementById('autoStatus').innerText = "⏳ 修復指令已派發...";
             await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
+                method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { target_date: date } })
             });
-            setTimeout(() => { alert(`機器人已出發去抓 ${date} 的資料了！請等 2 分鐘後重新整理網頁。`); }, 500);
+            alert(`已啟動 ${date} 的股價修復程式，請等待 2 分鐘後重新整理。`);
         }
 
         async function compareData() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
-            if(!dA || !dB) return alert("日期沒選齊");
-            
-            const [rA, rB] = await Promise.all([fetch(`data/${dA}.json`), fetch(`data/${dB}.json`)]);
-            if(!rA.ok || !rB.ok) return alert("其中一個日期的數據還沒抓好，請等機器人跑完。");
+            if(!dA || !dB) return alert("請選取兩個日期。");
 
-            const dA_json = await rA.json(), dB_json = await rB.json();
-            const mapA = Object.fromEntries(dA_json.etfs[etf].map(s => [s.id, s]));
-            const mapB = Object.fromEntries(dB_json.etfs[etf].map(s => [s.id, s]));
-            const pricesB = dB_json.market_prices || {};
-            
-            currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
-                const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
-                const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
-                const diff = sB.share - sA.share;
-                const price = pricesB[id] || 0;
-                let status = "不變", color = "text-slate-500 border-slate-700";
-                if(sB.share === 0 && sA.share > 0) { status = "出清"; color = "text-red-500 border-red-900 bg-red-950/20"; }
-                else if(diff > 0) { status = "加碼"; color = "text-red-400 border-red-800"; }
-                else if(diff < 0) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
-                return { id, name: sB.name || sA.name, shareA: sA.share, shareB: sB.share, diff, price, impact: diff * price, status, color };
-            });
-            sortRows(sortState.key, true);
+            try {
+                const [rA, rB] = await Promise.all([fetch(`data/${dA}.json`), fetch(`data/${dB}.json`)]);
+                if(!rA.ok) return alert(`找不到 ${dA} 的資料，請手動在 Actions 抓取。`);
+                if(!rB.ok) return alert(`找不到 ${dB} 的資料，請手動在 Actions 抓取。`);
+
+                const dA_json = await rA.json(), dB_json = await rB.json();
+                const mapA = Object.fromEntries(dA_json.etfs[etf].map(s => [s.id, s]));
+                const mapB = Object.fromEntries(dB_json.etfs[etf].map(s => [s.id, s]));
+                const pricesB = dB_json.market_prices || {};
+                
+                let missingPrice = false;
+                currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
+                    const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
+                    const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
+                    const diff = sB.share - sA.share;
+                    const price = pricesB[id] || 0;
+                    if(diff !== 0 && price === 0) missingPrice = true;
+                    
+                    let status = "不變", color = "text-slate-500 border-slate-700";
+                    if(sB.share === 0 && sA.share > 0) { status = "出清"; color = "text-red-500 border-red-900 bg-red-950/20"; }
+                    else if(diff > 0) { status = "加碼"; color = "text-red-400 border-red-800"; }
+                    else if(diff < 0) { status = "減碼"; color = "text-emerald-400 border-emerald-800"; }
+                    
+                    return { id, name: sB.name || sA.name, shareA: sA.share, shareB: sB.share, diff, price, impact: diff * price, status, color };
+                });
+
+                if(missingPrice) {
+                    document.getElementById('autoStatus').innerHTML = `⚠️ 偵測到股價為 0，<button onclick="triggerRepair('${dB}')" class="underline text-blue-400 font-bold">點我執行雲端修復</button>`;
+                } else {
+                    document.getElementById('autoStatus').innerText = "✅ 股價數據完整";
+                }
+
+                sortRows(sortState.key, true);
+            } catch (e) { alert("讀取發生錯誤，請稍後再試。"); }
         }
 
         function sortRows(key, init = false) {
