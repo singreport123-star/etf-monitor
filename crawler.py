@@ -1,45 +1,63 @@
 import requests
 import json
 import os
-import sys
-from datetime import datetime
+import yfinance as yf
+from datetime import datetime, timedelta
+import time
 
 def get_dates(target_date_str):
-    # 解析輸入日期 (YYYY-MM-DD)
     dt = datetime.strptime(target_date_str, "%Y-%m-%d")
     ad_date = dt.strftime("%Y-%m-%d")
     m_year = dt.year - 1911
     m_date = f"{m_year}/{dt.strftime('%m/%d')}"
-    return ad_date, m_date, dt.strftime("%Y%m%d")
+    return ad_date, m_date
 
-def get_tw_prices(date_yyyymmdd):
-    """抓取指定日期的上市、上櫃、興櫃收盤價"""
+def get_yahoo_prices(stock_ids, target_date_str):
     prices = {}
-    print(f"--- 正在抓取 {date_yyyymmdd} 全市場股價 ---")
+    print(f"--- 正在透過 Yahoo Finance 抓取 {target_date_str} 股價 ---")
+    
+    tickers_tw = [f"{sid}.TW" for sid in stock_ids]
+    tickers_two = [f"{sid}.TWO" for sid in stock_ids]
+    all_tickers = tickers_tw + tickers_two
+    
     try:
-        # 1. 上市 (MI_INDEX 支援歷史查詢)
-        res = requests.get(f"https://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&date={date_yyyymmdd}&type=ALL", timeout=15)
-        data = res.json()
-        if 'data9' in data: # 通常 data9 是收盤價表
-            for row in data['data9']:
-                prices[row[0].strip()] = float(row[8].replace(',', '')) if row[8].replace('.','',1).isdigit() else 0
+        start_dt = datetime.strptime(target_date_str, "%Y-%m-%d")
+        end_dt = start_dt + timedelta(days=1)
         
-        # 2. 上櫃
-        res = requests.get(f"https://www.tpex.org.tw/web/stock/aftertrading/otc_quotes_no1430/stk_quotes_result.php?l=zh-tw&d={date_yyyymmdd[:4]}/{date_yyyymmdd[4:6]}/{date_yyyymmdd[6:]}&o=json", timeout=15)
-        for row in res.json().get('aaData', []):
-            prices[row[0].strip()] = float(row[2].replace(',', '')) if row[2].replace('.','',1).isdigit() else 0
-            
-        print(f"✅ 股價抓取完成，共 {len(prices)} 筆標的。")
+        # 批量下載 (不印出進度條)
+        data = yf.download(all_tickers, start=start_dt.strftime("%Y-%m-%d"), 
+                           end=end_dt.strftime("%Y-%m-%d"), group_by='ticker', progress=False)
+        
+        for sid in stock_ids:
+            price = 0
+            for suffix in ['.TW', '.TWO']:
+                ticker = f"{sid}{suffix}"
+                if ticker in data.columns.levels[0]:
+                    try:
+                        day_data = data[ticker]
+                        if not day_data.empty:
+                            val = day_data['Close'].iloc[0]
+                            if str(val) != 'nan':
+                                price = round(float(val), 2)
+                                break
+                    except:
+                        continue
+            prices[sid] = price
+        print(f"✅ 股價抓取完成")
     except Exception as e:
-        print(f"⚠️ 股價抓取警告 (可能該日休市): {e}")
+        print(f"⚠️ Yahoo 抓取異常: {e}")
     return prices
 
-def fetch_unified(fund_code, m_date):
+def fetch_unified(m_date):
+    print(f"正在抓取 00981A (統一) - 日期: {m_date}")
     session = requests.Session()
-    headers = {"User-Agent": "Mozilla/5.0", "X-Requested-With": "XMLHttpRequest"}
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "X-Requested-With": "XMLHttpRequest"
+    }
     session.get("https://www.ezmoney.com.tw/ETF/Transaction/PCF", headers=headers)
     api_url = "https://www.ezmoney.com.tw/ETF/Transaction/GetPCF"
-    payload = {"fundCode": fund_code, "date": m_date, "specificDate": True}
+    payload = {"fundCode": "49YTW", "date": m_date, "specificDate": True}
     res = session.post(api_url, json=payload, headers=headers)
     data = res.json()
     stocks = []
@@ -49,9 +67,11 @@ def fetch_unified(fund_code, m_date):
                 stocks.append({"id": d['DetailCode'].strip(), "name": d['DetailName'], "share": d['Share']})
     return stocks
 
-def fetch_capital(fund_id, ad_date):
+def fetch_capital(ad_date):
+    print(f"正在抓取 00982A (群益) - 日期: {ad_date}")
     url = "https://www.capitalfund.com.tw/CFWeb/api/etf/buyback"
-    res = requests.post(url, json={"fundId": fund_id, "date": ad_date}, headers={"User-Agent": "Mozilla/5.0"})
+    payload = {"fundId": "399", "date": ad_date}
+    res = requests.post(url, json=payload, headers={"User-Agent": "Mozilla/5.0"})
     data = res.json()
     stocks = []
     for s in data.get('data', {}).get('stocks', []):
@@ -59,17 +79,25 @@ def fetch_capital(fund_id, ad_date):
     return stocks
 
 if __name__ == "__main__":
-    # 從環境變數讀取日期，預設為今天
     target_date = os.environ.get("TARGET_DATE", datetime.now().strftime("%Y-%m-%d"))
-    ad_date, m_date, raw_date = get_dates(target_date)
+    ad_date, m_date = get_dates(target_date)
     
-    all_data = {"date": ad_date, "etfs": {}, "market_prices": {}}
-    all_data["market_prices"] = get_tw_prices(raw_date)
-    all_data["etfs"]["00981A"] = fetch_unified("49YTW", m_date)
-    all_data["etfs"]["00982A"] = fetch_capital("399", ad_date)
+    result = {"date": ad_date, "etfs": {}, "market_prices": {}}
     
-    os.makedirs('data', exist_ok=True)
-    file_path = f"data/{ad_date}.json"
-    with open(file_path, 'w', encoding='utf-8') as f:
-        json.dump(all_data, f, ensure_ascii=False, indent=4)
-    print(f"🎉 日期 {ad_date} 數據已存檔")
+    # 執行採集
+    try:
+        result["etfs"]["00981A"] = fetch_unified(m_date)
+        result["etfs"]["00982A"] = fetch_capital(ad_date)
+        
+        unique_ids = set()
+        for etf in result["etfs"].values():
+            for s in etf: unique_ids.add(s['id'])
+        
+        result["market_prices"] = get_yahoo_prices(list(unique_ids), ad_date)
+        
+        os.makedirs('data', exist_ok=True)
+        with open(f"data/{ad_date}.json", 'w', encoding='utf-8') as f:
+            json.dump(result, f, ensure_ascii=False, indent=4)
+        print(f"🎉 {ad_date} 採集存檔成功")
+    except Exception as e:
+        print(f"❌ 採集失敗: {e}")
