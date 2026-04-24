@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 市值監測 v15.3</title>
+    <title>ETF 持股市值監測 v16.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .date-input-box { background: #1e293b; color: white; border: 2px solid #3b82f6; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 1.2rem; font-weight: 800; }
@@ -14,51 +14,47 @@
 </head>
 <body class="bg-slate-900 text-slate-100 p-4 md:p-10">
     <div class="max-w-[1700px] mx-auto">
-        <h1 class="text-5xl font-black mb-10 text-blue-400">📊 ETF 持股市值變動分析</h1>
+        <h1 class="text-5xl font-black mb-10 text-blue-400 italic">ETF MARKET VALUE TRACKER</h1>
 
-        <div class="bg-slate-800 p-6 rounded-2xl mb-8 flex gap-6 border border-slate-700 items-center">
-            <input id="ghOwner" type="text" placeholder="GitHub 帳號" class="bg-slate-900 p-2 border border-slate-700 rounded-xl w-48 outline-none">
-            <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-2 border border-slate-700 rounded-xl w-80 outline-none">
-            <div id="diagStatus" class="ml-auto font-mono text-emerald-400 font-bold text-sm uppercase">System Live</div>
-        </div>
+        <div id="errorDisplay" class="hidden bg-red-900/50 border border-red-500 text-red-200 p-6 rounded-2xl mb-8 text-xl font-bold animate-pulse"></div>
 
-        <div class="bg-slate-800 p-12 rounded-[2.5rem] mb-10 border border-slate-700 shadow-2xl">
+        <div class="bg-slate-800 p-10 rounded-[2.5rem] mb-10 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-end">
                 <div class="md:col-span-3">
-                    <label class="block text-xs text-slate-500 mb-4 font-bold uppercase">Target ETF</label>
-                    <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border border-slate-700 w-full font-black text-2xl outline-none">
+                    <label class="block text-xs text-slate-500 mb-4 font-bold uppercase">Select ETF</label>
+                    <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border border-slate-700 w-full font-black text-2xl outline-none focus:border-blue-500">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
                 <div class="md:col-span-3">
-                    <label class="block text-xs text-blue-400 mb-4 font-bold uppercase">📅 起始 A (舊)</label>
+                    <label class="block text-xs text-blue-400 mb-4 font-bold uppercase tracking-widest">📅 DATE A (舊)</label>
                     <input id="dateA" type="date" class="date-input-box">
                 </div>
                 <div class="md:col-span-1 text-center pb-6 text-slate-600 font-black italic text-4xl">VS</div>
                 <div class="md:col-span-3">
-                    <label class="block text-xs text-blue-400 mb-4 font-bold uppercase">📅 結束 B (新)</label>
+                    <label class="block text-xs text-blue-400 mb-4 font-bold uppercase tracking-widest">📅 DATE B (新)</label>
                     <input id="dateB" type="date" class="date-input-box">
                 </div>
                 <div class="md:col-span-2">
-                    <button id="runBtn" onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-2xl font-black text-2xl shadow-lg transition">跑分析</button>
+                    <button id="runBtn" onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-2xl font-black text-2xl shadow-lg transition active:scale-95">跑分析</button>
                 </div>
             </div>
         </div>
 
         <div class="bg-slate-800 rounded-[3rem] overflow-hidden border border-slate-700 shadow-2xl">
-            <table class="w-full text-left">
+            <table class="w-full text-left" id="mainTable">
                 <thead class="bg-slate-700 text-slate-400 font-black uppercase">
                     <tr>
                         <th class="p-6">標的</th>
                         <th class="p-6">異動狀態</th>
                         <th class="p-6 text-right">A日股數</th>
                         <th class="p-6 text-right">A日股價</th>
-                        <th class="p-6 text-right">A日市值</th>
+                        <th class="p-6 text-right font-bold text-slate-300">A日市值</th>
                         <th class="p-6 text-right">B日股數</th>
                         <th class="p-6 text-right">B日股價</th>
-                        <th class="p-6 text-right">B日市值</th>
-                        <th class="p-6 text-right bg-slate-600/40 text-blue-300">加減碼金額</th>
+                        <th class="p-6 text-right font-bold text-white">B日市值</th>
+                        <th class="p-6 text-right bg-slate-600/40 text-blue-300 text-2xl">加減碼金額</th>
                     </tr>
                 </thead>
                 <tbody id="resTable" class="divide-y divide-slate-700/50"></tbody>
@@ -69,15 +65,20 @@
     <script>
         let currentData = [];
         window.onload = () => {
-            document.getElementById('ghOwner').value = localStorage.getItem('ghOwner') || '';
-            document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
             const now = new Date(), today = now.toISOString().split('T')[0];
             document.getElementById('dateB').value = today;
             document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
         };
 
+        function showError(msg) {
+            const el = document.getElementById('errorDisplay');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+            setTimeout(() => el.classList.add('hidden'), 8000);
+        }
+
         async function triggerAction(date) {
-            const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
+            const owner = localStorage.getItem('ghOwner'), token = localStorage.getItem('ghToken');
             await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { target_date: date } })
@@ -85,26 +86,35 @@
         }
 
         async function runAnalysis() {
-            const btn = document.getElementById('runBtn');
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
-            btn.innerText = "⏳ 載入中...";
+            const btn = document.getElementById('runBtn');
+            btn.innerText = "⏳ 讀取中...";
             
             try {
                 const [rA, rB] = await Promise.all([fetch(`data/${dA}.json`), fetch(`data/${dB}.json`)]);
+                
                 if(!rA.ok || !rB.ok) {
+                    showError(`檔案缺失！正在叫機器人去補抓 ${!rA.ok ? dA : ''} ${!rB.ok ? dB : ''} 的資料...`);
                     if(!rA.ok) await triggerAction(dA);
                     if(!rB.ok) await triggerAction(dB);
                     btn.innerText = "跑分析";
-                    return alert("資料庫無檔案，已補抓 00982A，請等 2 分鐘再點。");
+                    return;
                 }
+
                 const jsonA = await rA.json(), jsonB = await rB.json();
                 
-                // 確保 etfs 存在，避免 JS 死掉
-                const listA = (jsonA.etfs && jsonA.etfs[etf]) ? jsonA.etfs[etf] : [];
-                const listB = (jsonB.etfs && jsonB.etfs[etf]) ? jsonB.etfs[etf] : [];
-                
-                const mapA = Object.fromEntries(listA.map(s => [s.id, s]));
-                const mapB = Object.fromEntries(listB.map(s => [s.id, s]));
+                // --- 診斷邏輯：檢查 00982A 是否真的存在於 JSON 裡 ---
+                if (!jsonA.etfs[etf] || jsonA.etfs[etf].length === 0) {
+                    btn.innerText = "跑分析";
+                    return showError(`❌ 錯誤：${dA} 的資料包裡找不到 ${etf} 的持股名單！建議刪除該日檔案重抓。`);
+                }
+                if (!jsonB.etfs[etf] || jsonB.etfs[etf].length === 0) {
+                    btn.innerText = "跑分析";
+                    return showError(`❌ 錯誤：${dB} 的資料包裡找不到 ${etf} 的持股名單！建議刪除該日檔案重抓。`);
+                }
+
+                const mapA = Object.fromEntries(jsonA.etfs[etf].map(s => [s.id, s]));
+                const mapB = Object.fromEntries(jsonB.etfs[etf].map(s => [s.id, s]));
                 const pA_pool = jsonA.market_prices || {}, pB_pool = jsonB.market_prices || {};
                 
                 currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
@@ -129,7 +139,7 @@
                         <td class="p-6"><span class="px-5 py-2 border rounded-full font-black text-sm ${row.color}">${row.status}</span></td>
                         <td class="p-6 text-right text-slate-400">${row.shareA.toLocaleString()}</td>
                         <td class="p-6 text-right text-slate-500">${row.pA || '-'}</td>
-                        <td class="p-6 text-right text-slate-400">${Math.round(row.valA).toLocaleString()}</td>
+                        <td class="p-6 text-right text-slate-300 font-bold">${Math.round(row.valA).toLocaleString()}</td>
                         <td class="p-6 text-right text-slate-100 font-bold">${row.shareB.toLocaleString()}</td>
                         <td class="p-6 text-right text-blue-300 font-black">${row.pB || '-'}</td>
                         <td class="p-6 text-right text-white font-black">${Math.round(row.valB).toLocaleString()}</td>
@@ -139,8 +149,8 @@
                 btn.innerText = "跑分析";
             } catch (e) {
                 console.error(e);
+                showError("JS 執行錯誤，請開啟 F12 檢查 Console。");
                 btn.innerText = "跑分析";
-                alert("JS 讀取錯誤，可能是資料包損壞，建議刪除 JSON 重抓。");
             }
         }
     </script>
