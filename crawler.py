@@ -3,41 +3,59 @@ import json
 import os
 import yfinance as yf
 from datetime import datetime, timedelta
+import time
 
 def get_dates(target_date_str):
     dt = datetime.strptime(target_date_str, "%Y-%m-%d")
     return dt.strftime("%Y-%m-%d"), f"{dt.year - 1911}/{dt.strftime('%m/%d')}"
 
+def get_single_price(sid):
+    """針對 0 股價標的進行 30 天追溯抓取"""
+    for suffix in ['.TW', '.TWO']:
+        ticker = f"{sid}{suffix}"
+        try:
+            stock = yf.Ticker(ticker)
+            # 抓取最近一個月，確保拿得到價格
+            hist = stock.history(period="1mo")
+            if not hist.empty:
+                val = hist['Close'].dropna().iloc[-1]
+                if val > 0: return round(float(val), 2)
+        except: continue
+    return "Yahoo無資料"
+
 def get_yahoo_prices(stock_ids, target_date_str):
     prices = {}
     if not stock_ids: return {}
     
-    # 確保代碼是純數字且不重複
-    clean_ids = list(set([str(sid).strip() for sid in stock_ids if str(sid).strip().isdigit()]))
-    print(f"--- 執行全域股價補完計畫 (共 {len(clean_ids)} 檔) ---")
+    clean_ids = list(set([str(sid).strip() for sid in stock_ids if sid]))
+    print(f"--- 執行全域股價暴力補完 (共 {len(clean_ids)} 檔) ---")
     
+    # 第一輪：批量抓取最近 7 天
     all_tickers = [f"{sid}.TW" for sid in clean_ids] + [f"{sid}.TWO" for sid in clean_ids]
-    
     try:
-        # 抓取最近一個月的歷史紀錄，確保拿得到最後一個收盤價
         end_dt = datetime.strptime(target_date_str, "%Y-%m-%d") + timedelta(days=1)
-        start_dt = end_dt - timedelta(days=30)
+        start_dt = end_dt - timedelta(days=7)
         data = yf.download(all_tickers, start=start_dt.strftime("%Y-%m-%d"), 
                            end=end_dt.strftime("%Y-%m-%d"), group_by='ticker', progress=False)
         
         for sid in clean_ids:
-            price = 0
+            p = 0
             for suffix in ['.TW', '.TWO']:
-                ticker = f"{sid}{suffix}"
-                if ticker in data.columns.levels[0]:
-                    series = data[ticker]['Close'].dropna()
+                t = f"{sid}{suffix}"
+                if t in data.columns.levels[0]:
+                    series = data[t]['Close'].dropna()
                     if not series.empty:
-                        price = round(float(series.iloc[-1]), 2)
+                        p = round(float(series.iloc[-1]), 2)
                         break
-            # 如果還是 0，就回傳一個識別字串
-            prices[sid] = price if price > 0 else "Yahoo無資料"
-    except Exception as e:
-        print(f"Yahoo 引擎異常: {e}")
+            prices[sid] = p
+    except: pass
+
+    # 第二輪：防呆檢查，如果是 0 或空值，就暴力單點追溯
+    for sid in clean_ids:
+        if prices.get(sid, 0) == 0:
+            print(f"🕵️ 偵測到 {sid} 價格缺失，執行 30 天追溯...")
+            prices[sid] = get_single_price(sid)
+            
     return prices
 
 def fetch_unified(m_date):
@@ -61,29 +79,24 @@ if __name__ == "__main__":
     ad_date, m_date = get_dates(target_date)
     result = {"date": ad_date, "etfs": {}, "market_prices": {}}
     
-    # 1. 抓取今日標的
     result["etfs"]["00981A"] = fetch_unified(m_date)
     result["etfs"]["00982A"] = fetch_capital(ad_date)
-
-    # 2. 暴力掃描所有歷史數據，建立「標的全宇宙」
-    universe_ids = set()
-    # 加入今天的新名單
-    for etf in result["etfs"].values():
-        for s in etf: universe_ids.add(s['id'])
     
-    # 加入資料夾內所有舊標的
+    # 掃描歷史檔案，建立「標的全宇宙」
+    ids = set()
+    for etf in result["etfs"].values():
+        for s in etf: ids.add(s['id'])
     if os.path.exists('data'):
-        for file in os.listdir('data'):
-            if file.endswith('.json'):
+        for f in os.listdir('data'):
+            if f.endswith('.json'):
                 try:
-                    with open(f'data/{file}', 'r') as f:
-                        old = json.load(f)
-                        for e_data in old.get('etfs', {}).values():
-                            for s in e_data: universe_ids.add(s['id'])
+                    with open(f'data/{f}', 'r') as j:
+                        past = json.load(j)
+                        for e_data in past.get('etfs', {}).values():
+                            for s in e_data: ids.add(s['id'])
                 except: continue
 
-    # 3. 抓取這份全宇宙清單的價格
-    result["market_prices"] = get_yahoo_prices(list(universe_ids), ad_date)
+    result["market_prices"] = get_yahoo_prices(list(ids), ad_date)
     
     os.makedirs('data', exist_ok=True)
     with open(f"data/{ad_date}.json", 'w', encoding='utf-8') as f:
