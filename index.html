@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 市值監測 v21.0 - 手動補貨版</title>
+    <title>ETF 市值監測 v21.5 - 三段補貨版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.3rem; font-weight: 900; }
@@ -14,29 +14,33 @@
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
         tbody tr td { font-size: 1.35rem; padding: 2.2rem 1rem !important; }
         .font-num { font-family: ui-monospace, monospace; font-weight: 800; }
+        .feed-btn { transition: all 0.2s; font-weight: 800; }
+        .feed-btn:active { scale: 0.95; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 p-8">
     <div class="max-w-[1900px] mx-auto">
-        <div class="flex justify-between items-end mb-12">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
             <h1 class="text-6xl font-black text-blue-400 tracking-tighter italic">PORTFOLIO ANALYZER</h1>
-            <button onclick="feedData(15)" class="bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-2xl font-bold text-lg shadow-lg transition active:scale-95 flex items-center gap-2">
-                ⚡ 一鍵補抓最近 15 天數據
-            </button>
+            <div class="flex gap-4">
+                <button onclick="feedData(1)" class="feed-btn bg-slate-700 hover:bg-slate-600 text-white px-5 py-3 rounded-xl border border-slate-500 shadow-lg">⚡ 補 1 天</button>
+                <button onclick="feedData(5)" class="feed-btn bg-blue-700 hover:bg-blue-600 text-white px-5 py-3 rounded-xl border border-blue-500 shadow-lg">⚡ 補 5 天</button>
+                <button onclick="feedData(15)" class="feed-btn bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl border border-emerald-500 shadow-lg">⚡ 補 15 天</button>
+            </div>
         </div>
 
         <div class="bg-slate-800 p-12 rounded-[3rem] mb-12 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-end">
                 <div class="md:col-span-3">
-                    <label class="block text-sm text-slate-500 mb-4 font-bold uppercase tracking-widest">Target ETF</label>
-                    <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border-2 border-slate-700 w-full font-black text-2xl outline-none focus:border-blue-500">
+                    <label class="block text-sm text-slate-500 mb-4 font-bold uppercase tracking-widest text-center md:text-left">Target ETF</label>
+                    <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border-2 border-slate-700 w-full font-black text-2xl outline-none focus:border-blue-500 text-center">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
-                <div class="md:col-span-3"><label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 DATE A (舊)</label><input id="dateA" type="date" class="date-input w-full"></div>
+                <div class="md:col-span-3"><label class="block text-sm text-blue-400 mb-4 font-bold uppercase text-center md:text-left">📅 DATE A (舊)</label><input id="dateA" type="date" class="date-input w-full"></div>
                 <div class="md:col-span-1 text-center pb-6 text-slate-600 font-black italic text-5xl">VS</div>
-                <div class="md:col-span-3"><label class="block text-sm text-blue-400 mb-4 font-bold uppercase">📅 DATE B (新)</label><input id="dateB" type="date" class="date-input w-full"></div>
+                <div class="md:col-span-3"><label class="block text-sm text-blue-400 mb-4 font-bold uppercase text-center md:text-left">📅 DATE B (新)</label><input id="dateB" type="date" class="date-input w-full"></div>
                 <div class="md:col-span-2"><button onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-3xl font-black text-3xl shadow-lg transition active:scale-95">跑分析</button></div>
             </div>
         </div>
@@ -73,25 +77,24 @@
             document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
         };
 
-        // ⚡ 批量餵食功能
+        // ⚡ 三段式補貨邏輯
         async function feedData(days) {
             const owner = localStorage.getItem('ghOwner'), token = localStorage.getItem('ghToken');
-            if(!owner || !token) return alert("請確認已輸入 GitHub 帳號與 Token。");
-            if(!confirm(`確定要讓機器人補抓最近 ${days} 天的資料嗎？這大約需要 2 分鐘。`)) return;
+            if(!owner || !token) return alert("請輸入 GitHub Token。");
+            if(!confirm(`確定要補抓最近 ${days} 天的資料？`)) return;
 
             const res = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ ref: 'main', inputs: { days: String(days) } })
             });
-            if(res.ok) alert("🚀 補貨指令已送出！請等 2 分鐘讓機器人搬運資料。");
-            else alert("補貨失敗，請檢查 Token 權限。");
+            if(res.ok) alert(`🚀 指令已發出！正在補抓 ${days} 天數據，請等 2 分鐘。`);
         }
 
         async function runAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
             try {
                 const [rA, rB] = await Promise.all([fetch(`data/${etf}/${dA}.json`), fetch(`data/${etf}/${dB}.json`)]);
-                if(!rA.ok || !rB.ok) return alert("資料缺失：檔案尚未產出。若此日期為近期，請點擊上方的『補抓最近 15 天』。");
+                if(!rA.ok || !rB.ok) return alert("資料缺失。請點擊上方的『補 5 天』或『補 15 天』讓機器人抓資料。");
                 
                 const jsonA = await rA.json(), jsonB = await rB.json();
                 const mapA = Object.fromEntries(jsonA.holdings.map(s => [s.id, s]));
@@ -114,7 +117,7 @@
                     return { id, name: sB.name || sA.name, status, status_rank: statusWeight[status], color, pA, shareA: sA.share, valA, pB, shareB: sB.share, valB, impact };
                 });
                 renderTable();
-            } catch (e) { alert("分析失敗，請檢查資料結構。"); }
+            } catch (e) { alert("讀取出錯，請確認資料夾內有檔案。"); }
         }
 
         function handleSort(key) {
@@ -135,7 +138,7 @@
                 if(headers[i] === sortState.key) th.classList.add(sortState.asc ? 'sort-asc' : 'sort-desc');
             });
             document.getElementById('resTable').innerHTML = currentData.map(row => `
-                <tr class="hover:bg-slate-700/30 transition-all">
+                <tr class="hover:bg-slate-700/30">
                     <td class="p-8"><b>${row.name}</b><br><span class="text-sm font-mono text-slate-500">${row.id}</span></td>
                     <td><span class="px-5 py-2 border rounded-full font-black text-sm ${row.color}">${row.status}</span></td>
                     <td class="text-right font-num text-slate-500">${row.pA || '-'}</td>
