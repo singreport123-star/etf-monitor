@@ -1,41 +1,42 @@
-name: 指定日期 ETF 採集
-
+name: ETF 數據採集與補貨
 on:
   workflow_dispatch:
     inputs:
-      target_date:
-        description: '欲抓取的日期 (YYYY-MM-DD)'
-        required: true
+      days:
+        description: '要補抓的天數 (預設 1 天)'
+        default: '1'
+        required: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: 設定 Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          
-      - name: 安裝套件
+      - name: Install dependencies
         run: pip install requests yfinance
-        
-      - name: 執行採集
-        env:
-          TARGET_DATE: ${{ github.event.inputs.target_date }}
-        run: python crawler.py
-        
-      - name: 更新日期清單
+      
+      - name: 執行採集 (支援批量)
         run: |
-          mkdir -p data
-          # 掃描資料夾產出 list.json
-          ls data/*.json | sed 's/data\///g' | sed 's/.json//g' | jq -R . | jq -s 'sort | reverse' > list.json
+          # 取得要跑的天數，預設是 1
+          DAYS=${{ github.event.inputs.days }}
+          echo "準備補抓過去 $DAYS 天的資料..."
           
-      - name: 自動提交存檔
+          # 寫一個迴圈，從 0 數到 DAYS-1
+          for i in $(seq 0 $((DAYS-1))); do
+            # 算出日期 (YYYY-MM-DD)
+            export TARGET_DATE=$(date -d "$i days ago" +%Y-%m-%d)
+            echo "--- 正在處理: $TARGET_DATE ---"
+            python crawler.py
+          done
+
+      - name: 存檔回 GitHub
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/*.json list.json
-          git commit -m "Update: ${{ github.event.inputs.target_date }}" || exit 0
+          git add .
+          git commit -m "Manual Feeding: Updated ETF Data" || exit 0
           git push
