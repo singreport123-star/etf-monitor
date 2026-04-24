@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 市值變動監測站 v10.0</title>
+    <title>ETF 市值監測站 v11.0 - 專業數據管理版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         input[type="date"] { background: #1e293b; color: white; border: 2px solid #334155; padding: 10px; border-radius: 12px; cursor: pointer; width: 100%; }
@@ -15,42 +15,44 @@
 </head>
 <body class="bg-slate-900 text-slate-100 p-4 md:p-8">
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-3xl font-black mb-8 text-blue-400">📊 ETF 市值異動分析與數據管理</h1>
+        <h1 class="text-3xl font-black mb-8 text-blue-400 tracking-tighter">📊 ETF 數據管理中心</h1>
 
         <div class="bg-slate-800 p-6 rounded-2xl mb-8 border border-slate-700 shadow-xl flex flex-wrap gap-6 items-center">
-            <div class="flex-1 min-w-[300px] flex gap-2">
-                <input id="ghOwner" type="text" placeholder="GitHub 帳號" class="bg-slate-900 p-2 border border-slate-700 rounded w-1/3 outline-none">
-                <input id="ghToken" type="password" placeholder="Token" class="bg-slate-900 p-2 border border-slate-700 rounded flex-1 outline-none">
+            <div class="flex-1 flex gap-2">
+                <input id="ghOwner" type="text" placeholder="GitHub 帳號" class="bg-slate-900 p-2 border border-slate-700 rounded w-1/3 outline-none focus:border-blue-500">
+                <input id="ghToken" type="password" placeholder="Token (需 repo 權限)" class="bg-slate-900 p-2 border border-slate-700 rounded flex-1 outline-none focus:border-blue-500">
             </div>
-            <div class="flex gap-4">
-                <button onclick="clearLocalSettings()" class="text-xs bg-slate-700 hover:bg-red-900 px-4 py-2 rounded-lg transition">清空本地設定</button>
-                <div id="diagStatus" class="font-mono text-emerald-400 font-bold uppercase text-xs">Ready</div>
+            <div class="flex gap-4 items-center">
+                <button onclick="clearLocal()" class="text-xs text-red-400 border border-red-900 px-3 py-2 rounded-lg hover:bg-red-900/20 transition">登出 / 清空設定</button>
+                <div id="statusBadge" class="px-3 py-1 rounded-full bg-slate-700 text-[10px] font-bold uppercase">Ready</div>
             </div>
         </div>
 
         <div class="bg-slate-800 p-8 rounded-2xl mb-8 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-5 gap-8 items-end">
                 <div>
-                    <label class="block text-[10px] text-slate-500 mb-2 font-bold">標的</label>
-                    <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold">
+                    <label class="block text-[10px] text-slate-500 mb-2 font-bold uppercase">選擇標的</label>
+                    <select id="etfId" class="bg-slate-900 p-3 rounded-xl border border-slate-700 w-full font-bold outline-none">
                         <option value="00981A">00981A (統一)</option>
                         <option value="00982A">00982A (群益)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 Date A (舊)</label>
+                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase tracking-widest">📅 起始 A (舊)</label>
                     <input id="dateA" type="date">
-                    <button onclick="deleteDayData('dateA')" class="mt-2 w-full text-[10px] text-red-500 hover:underline">🗑️ 刪除此日資料</button>
+                    <button onclick="deleteFile('dateA')" class="mt-2 w-full text-[10px] text-red-500 hover:text-red-400 font-bold flex items-center justify-center gap-1">
+                        <span class="border border-red-900 px-2 py-1 rounded">🗑️ 刪除此日並重抓</span>
+                    </button>
                 </div>
                 <div class="text-center pb-12 text-slate-600 font-black italic text-xl">VS</div>
                 <div>
-                    <label class="block text-[10px] text-blue-400 mb-2 font-bold">📅 Date B (新)</label>
+                    <label class="block text-[10px] text-blue-400 mb-2 font-bold uppercase tracking-widest">📅 結束 B (新)</label>
                     <input id="dateB" type="date">
-                    <button onclick="deleteDayData('dateB')" class="mt-2 w-full text-[10px] text-red-500 hover:underline">🗑️ 刪除此日資料</button>
+                    <button onclick="deleteFile('dateB')" class="mt-2 w-full text-[10px] text-red-500 hover:text-red-400 font-bold flex items-center justify-center gap-1">
+                        <span class="border border-red-900 px-2 py-1 rounded">🗑️ 刪除此日並重抓</span>
+                    </button>
                 </div>
-                <div class="flex flex-col gap-2">
-                    <button onclick="runAnalysis()" class="bg-blue-600 hover:bg-blue-500 py-3.5 rounded-xl font-black shadow-lg transition active:scale-95">跑分析報表</button>
-                </div>
+                <button onclick="runAnalysis()" class="bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black shadow-lg transition active:scale-95 text-sm">跑分析報表</button>
             </div>
         </div>
 
@@ -83,39 +85,44 @@
             fetch('list.json?t='+Date.now()).then(r => r.json()).then(d => { if(d.length > 1) document.getElementById('dateA').value = d[1]; });
         };
 
-        function clearLocalSettings() { if(confirm("確定清空本地 Token 紀錄嗎？")) { localStorage.clear(); location.reload(); } }
+        function clearLocal() { if(confirm("確定登出並清除所有本地設定？")) { localStorage.clear(); location.reload(); } }
 
-        async function deleteDayData(inputId) {
+        async function deleteFile(inputId) {
             const date = document.getElementById(inputId).value;
             const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
-            if(!date || !owner || !token) return alert("請選取日期並確認認證資訊。");
-            if(!confirm(`確定要從 GitHub 刪除 ${date} 的資料嗎？此動作無法復原。`)) return;
+            if(!date || !owner || !token) return alert("請選取日期並確認 Token 已經填寫。");
+            if(!confirm(`⚠️ 危險動作！\n確定要從 GitHub 刪除 ${date} 的原始檔案嗎？\n刪除後系統會自動啟動重抓任務，以補齊缺失的股價。`)) return;
 
-            const diag = document.getElementById('diagStatus');
-            diag.innerText = "⏳ 正在執行刪除...";
-            
+            const badge = document.getElementById('statusBadge');
+            badge.innerText = "Processing..."; badge.className = "px-3 py-1 rounded-full bg-yellow-600 text-[10px] font-bold uppercase animate-pulse";
+
             try {
-                // 1. 取得檔案 SHA
+                // 1. 抓取檔案資訊以獲取 SHA
                 const fileRes = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/contents/data/${date}.json`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const fileData = await fileRes.json();
-                if(!fileData.sha) throw new Error("找不到檔案 SHA");
-
-                // 2. 執行刪除
-                const delRes = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/contents/data/${date}.json`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
-                    body: JSON.stringify({ message: `Delete data for ${date}`, sha: fileData.sha })
-                });
-
-                if(delRes.ok) {
-                    alert(`${date} 資料已刪除！請等待 1 分鐘後重新整理頁面以更新清單。`);
-                    location.reload();
-                } else { throw new Error(); }
+                
+                if(!fileData.sha) {
+                    alert("GitHub 上找不到該日期的檔案。");
+                } else {
+                    // 2. 執行刪除
+                    const delRes = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/contents/data/${date}.json`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
+                        body: JSON.stringify({ message: `🗑️ System delete: ${date} for re-sync`, sha: fileData.sha })
+                    });
+                    
+                    if(delRes.ok) {
+                        badge.innerText = "Success"; badge.className = "px-3 py-1 rounded-full bg-emerald-600 text-[10px] font-bold uppercase";
+                        alert(`${date} 資料已刪除！機器人將在 3 秒後自動啟動重抓。`);
+                        await triggerAction(date);
+                        location.reload();
+                    } else { throw new Error(); }
+                }
             } catch (e) {
-                diag.innerText = "❌ 刪除失敗";
-                alert("刪除失敗，請檢查 Token 權限（需要 repo 權限）。");
+                badge.innerText = "Failed"; badge.className = "px-3 py-1 rounded-full bg-red-600 text-[10px] font-bold uppercase";
+                alert("刪除失敗！請檢查您的 Token 是否具備 [repo] 權限。");
             }
         }
 
@@ -135,7 +142,7 @@
             if(!rA.ok || !rB.ok) {
                 if(!rA.ok) await triggerAction(dA);
                 if(!rB.ok) await triggerAction(dB);
-                return alert("部分資料尚在補抓，請等 2 分鐘。");
+                return alert("正在自動補抓缺失的數據，請等 2 分鐘。");
             }
 
             const jsonA = await rA.json(), jsonB = await rB.json();
@@ -146,14 +153,9 @@
             currentData = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)])).map(id => {
                 const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                 const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
-                
-                // 修正 A 日市值：必須從 jsonA 的價格包裡拿
                 const pA = (typeof pricesA[id] === 'number') ? pricesA[id] : 0;
                 const pB = (typeof pricesB[id] === 'number') ? pricesB[id] : 0;
-                
-                const valA = sA.share * pA;
-                const valB = sB.share * pB;
-                const impact = valB - valA;
+                const valA = sA.share * pA, valB = sB.share * pB, impact = valB - valA;
                 
                 let status = "不變", color = "text-slate-500 border-slate-700";
                 if(sA.share === 0 && sB.share > 0) { status = "新進"; color = "text-yellow-400 border-yellow-900"; }
@@ -180,7 +182,7 @@
                 if(keys[i] === sortState.key) th.classList.add(sortState.asc ? 'sort-asc' : 'sort-desc');
             });
             document.getElementById('resTable').innerHTML = currentData.map(row => `
-                <tr class="hover:bg-slate-700/40 transition-colors">
+                <tr class="hover:bg-slate-700/40">
                     <td class="p-5"><b>${row.name}</b> <br><span class="text-[9px] font-mono text-slate-500">${row.id}</span></td>
                     <td class="p-5"><span class="text-[10px] px-2 py-0.5 border rounded-full font-black ${row.color}">${row.status}</span></td>
                     <td class="p-5 text-right text-slate-400">${Math.round(row.valA).toLocaleString()}</td>
