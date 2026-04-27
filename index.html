@@ -2,29 +2,30 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 持股市值監測 v23.0 - 工業強化版</title>
+    <title>ETF 持股市值監測 v24.0 - 字體對齊強化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 全域字體強化：統一調整為大字級 */
+        /* 1. 基礎 UI 字體放大 */
         .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.5rem; font-weight: 900; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.6; cursor: pointer; }
         
-        th { white-space: nowrap; font-size: 1.2rem; padding: 1.8rem 1rem !important; cursor: pointer; transition: 0.2s; position: relative; }
-        th:hover { background: #334155; color: #60a5fa; }
+        /* 2. 表頭字體 */
+        th { white-space: nowrap; font-size: 1.4rem; padding: 2rem 1rem !important; cursor: pointer; transition: 0.2s; position: relative; }
         .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 8px; }
-        .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
-        .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
-
-        /* 統一數據欄位字體：放大至 1.5rem */
-        tbody tr td { font-size: 1.5rem; padding: 2.2rem 1rem !important; vertical-align: middle; }
-        .font-num { font-family: ui-monospace, SFMono-Regular, monospace; font-weight: 800; }
         
-        .config-input { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #94a3b8; outline: none; }
-        .config-input:focus { border-color: #3b82f6; color: white; }
+        /* 3. 數據欄位：統一字體大小的核心設定 */
+        tbody tr td { 
+            font-size: 1.8rem !important; /* 強制所有數據欄位大小一致 */
+            padding: 2.5rem 1rem !important; 
+            vertical-align: middle; 
+            font-weight: 800;
+        }
+        .font-num { font-family: ui-monospace, SFMono-Regular, monospace; }
         
-        /* Checkbox 樣式強化 */
-        .col-toggle { transform: scale(1.5); accent-color: #3b82f6; cursor: pointer; }
-        .col-label { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        /* 4. 輔助樣式修正 */
+        .config-input { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #94a3b8; outline: none; font-size: 1.1rem; }
+        .col-toggle-label { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .col-toggle { transform: scale(1.6); accent-color: #3b82f6; cursor: pointer; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 p-8">
@@ -32,68 +33,55 @@
         
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
             <h1 class="text-6xl font-black text-blue-400 tracking-tighter italic">PORTFOLIO ANALYZER</h1>
-            
             <div class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl flex flex-wrap gap-4 items-center">
                 <div class="flex flex-col">
                     <span class="text-[10px] font-black text-slate-500 uppercase mb-1 ml-1">GitHub Owner</span>
-                    <input id="ghOwner" type="text" placeholder="帳號名稱" class="config-input w-32">
+                    <input id="ghOwner" type="text" placeholder="帳號" class="config-input w-32">
                 </div>
                 <div class="flex flex-col">
                     <span class="text-[10px] font-black text-slate-500 uppercase mb-1 ml-1">Personal Token</span>
-                    <input id="ghToken" type="password" placeholder="ghp_xxxx" class="config-input w-56">
+                    <input id="ghToken" type="password" placeholder="ghp_..." class="config-input w-56">
                 </div>
                 <div class="h-10 w-px bg-slate-700 mx-2"></div>
-                <div class="flex flex-col">
-                    <span class="text-[10px] font-black text-emerald-500 uppercase mb-1 ml-1">Batch Feeding Tools</span>
-                    <div class="flex gap-2">
-                        <button onclick="feedData(1)" class="bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 1天</button>
-                        <button onclick="feedData(5)" class="bg-blue-700 hover:bg-blue-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 5天</button>
-                        <button onclick="feedData(15)" class="bg-emerald-700 hover:bg-emerald-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 15天</button>
-                        <button onclick="feedData(30)" class="bg-purple-700 hover:bg-purple-600 px-3 py-2 rounded-lg text-xs font-bold transition">⚡ 30天</button>
-                    </div>
+                <div class="flex gap-2">
+                    <button onclick="feedData(1)" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-bold transition">⚡ 1天</button>
+                    <button onclick="feedData(30)" class="bg-purple-700 hover:bg-purple-600 px-4 py-2 rounded-lg text-sm font-bold transition">⚡ 30天</button>
                 </div>
             </div>
         </div>
 
         <div class="bg-slate-800/50 p-6 rounded-3xl mb-6 border border-slate-700 flex flex-wrap gap-6 items-center">
-            <span class="text-blue-400 font-black italic mr-2 text-xl">DISPLAY COLUMNS:</span>
-            <label class="col-label opacity-50 cursor-not-allowed"><input type="checkbox" checked disabled class="col-toggle"> 標的</label>
-            <label class="col-label"><input type="checkbox" checked onchange="renderTable()" data-col="status_rank" class="col-toggle view-cfg"> 異動狀態</label>
-            <label class="col-label"><input type="checkbox" checked onchange="renderTable()" data-col="pA" class="col-toggle view-cfg"> A日股價</label>
-            <label class="col-label"><input type="checkbox" checked onchange="renderTable()" data-col="shareA" class="col-toggle view-cfg"> A日股數</label>
-            <label class="col-label"><input type="checkbox" checked onchange="renderTable()" data-col="valA" class="col-toggle view-cfg"> A日市值</label>
-            <label class="col-label"><input type="checkbox" checked onchange="renderTable()" data-col="pB" class="col-toggle view-cfg"> B日股價</label>
-            <label class="col-label"><input type="checkbox" checked onchange="renderTable()" data-col="shareB" class="col-toggle view-cfg"> B日股數</label>
-            <label class="col-label"><input type="checkbox" checked onchange="renderTable()" data-col="valB" class="col-toggle view-cfg"> B日市值</label>
-            <label class="col-label text-yellow-400"><input type="checkbox" checked onchange="renderTable()" data-col="impact" class="col-toggle view-cfg"> 加減碼金額</label>
-            <label class="col-label text-orange-400"><input type="checkbox" checked onchange="renderTable()" data-col="marketChange" class="col-toggle view-cfg"> 市值變動</label>
+            <span class="text-blue-400 font-black italic text-2xl">VIEW SETTINGS:</span>
+            <label class="col-toggle-label opacity-50 cursor-not-allowed"><input type="checkbox" checked disabled class="col-toggle"> 標的</label>
+            <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="status_rank" class="col-toggle view-cfg"> 異動狀態</label>
+            <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="pB" class="col-toggle view-cfg"> B日股價</label>
+            <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="valB" class="col-toggle view-cfg"> B日市值</label>
+            <label class="col-toggle-label text-yellow-400"><input type="checkbox" checked onchange="renderTable()" data-col="impact" class="col-toggle view-cfg"> 加減碼金額</label>
+            <label class="col-toggle-label text-orange-400"><input type="checkbox" checked onchange="renderTable()" data-col="marketChange" class="col-toggle view-cfg"> 市值變動</label>
         </div>
 
         <div class="bg-slate-800 p-12 rounded-[3.5rem] mb-12 border border-slate-700 shadow-2xl">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-end">
                 <div class="md:col-span-3">
-                    <label class="block text-xs text-slate-500 mb-4 font-bold uppercase tracking-widest text-center md:text-left">Target Portfolio</label>
-                    <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border-2 border-slate-700 w-full font-black text-2xl outline-none focus:border-blue-500 text-center">
+                    <select id="etfId" class="bg-slate-900 p-5 rounded-2xl border-2 border-slate-700 w-full font-black text-2xl outline-none focus:border-blue-500">
                         <option value="00981A">00981A (統一強棒)</option>
                         <option value="00982A">00982A (群益強棒)</option>
                     </select>
                 </div>
-                <div class="md:col-span-3"><label class="block text-xs text-blue-400 mb-4 font-bold uppercase">📅 起始日期 A (舊)</label><input id="dateA" type="date" class="date-input w-full"></div>
+                <div class="md:col-span-3"><input id="dateA" type="date" class="date-input w-full"></div>
                 <div class="md:col-span-1 text-center pb-6 text-slate-600 font-black italic text-5xl">VS</div>
-                <div class="md:col-span-3"><label class="block text-xs text-blue-400 mb-4 font-bold uppercase">📅 結束日期 B (新)</label><input id="dateB" type="date" class="date-input w-full"></div>
-                <div class="md:col-span-2"><button onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-3xl font-black text-3xl shadow-lg transition active:scale-95">跑分析</button></div>
+                <div class="md:col-span-3"><input id="dateB" type="date" class="date-input w-full"></div>
+                <div class="md:col-span-2"><button onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-3xl font-black text-3xl shadow-lg transition">跑分析</button></div>
             </div>
         </div>
 
         <div class="bg-slate-800 rounded-[3.5rem] overflow-hidden border border-slate-700 shadow-2xl">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left" id="mainTable">
-                    <thead class="bg-slate-700 text-slate-300 font-black uppercase tracking-widest">
-                        <tr id="tableHeader"></tr>
-                    </thead>
-                    <tbody id="resTable" class="divide-y divide-slate-700/50"></tbody>
-                </table>
-            </div>
+            <table class="w-full text-left">
+                <thead class="bg-slate-700 text-slate-300 font-black">
+                    <tr id="tableHeader"></tr>
+                </thead>
+                <tbody id="resTable" class="divide-y divide-slate-700/50"></tbody>
+            </table>
         </div>
     </div>
 
@@ -110,38 +98,34 @@
             pB: { label: 'B日股價', class: 'text-right text-blue-300 sort-icon' },
             shareB: { label: 'B日股數', class: 'text-right sort-icon' },
             valB: { label: 'B日市值', class: 'text-right text-white sort-icon' },
-            impact: { label: '加減碼金額', class: 'text-right bg-slate-600/40 text-yellow-400 text-5xl sort-icon' },
-            marketChange: { label: '市值變動', class: 'text-right text-orange-400 text-3xl sort-icon' }
+            impact: { label: '加減碼金額', class: 'text-right bg-slate-600/40 text-yellow-400 sort-icon' },
+            marketChange: { label: '市值變動', class: 'text-right text-orange-400 sort-icon' }
         };
 
         window.onload = () => {
             document.getElementById('ghOwner').value = localStorage.getItem('ghOwner') || '';
             document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
-            const now = new Date(), today = now.toISOString().split('T')[0];
-            document.getElementById('dateB').value = today;
+            const now = new Date();
+            document.getElementById('dateB').value = now.toISOString().split('T')[0];
             document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
             renderTable();
         };
 
         async function feedData(days) {
             const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
-            if(!owner || !token) return alert("請先填寫 GitHub 帳號與 Token！");
-            localStorage.setItem('ghOwner', owner); localStorage.setItem('ghToken', token);
-            if(!confirm(`確定要補抓最近 ${days} 天的數據嗎？`)) return;
+            if(!owner || !token) return alert("Credentials Missing");
             const res = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
-                method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
+                method: 'POST', headers: { 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ ref: 'main', inputs: { days: String(days) } })
             });
-            if(res.ok) alert(`🚀 指令已送出！`);
-            else alert("發送失敗。");
+            if(res.ok) alert("🚀 指令已送出");
         }
 
         async function runAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
             try {
                 const [rA, rB] = await Promise.all([fetch(`data/${etf}/${dA}.json`), fetch(`data/${etf}/${dB}.json`)]);
-                if(!rA.ok || !rB.ok) return alert("資料缺失！");
-                
+                if(!rA.ok || !rB.ok) return alert("資料缺失");
                 const jsonA = await rA.json(), jsonB = await rB.json();
                 const mapA = Object.fromEntries(jsonA.holdings.map(s => [s.id, s]));
                 const mapB = Object.fromEntries(jsonB.holdings.map(s => [s.id, s]));
@@ -153,19 +137,21 @@
                     const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                     const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
                     const valA = sA.share * pA, valB = sB.share * pB;
-                    const impact = pB * (sB.share - sA.share); 
-                    const marketChange = valB - valA;
-
                     let status = "持平", color = "text-slate-500";
                     if(sA.share === 0) { status = "新進"; color = "text-yellow-400"; }
                     else if(sB.share === 0) { status = "出清"; color = "text-red-500"; }
                     else if(sB.share > sA.share) { status = "加碼"; color = "text-red-400"; }
                     else if(sB.share < sA.share) { status = "減碼"; color = "text-emerald-400"; }
                     
-                    return { id, name: sB.name || sA.name, status, status_rank: statusWeight[status], color, pA, shareA: sA.share, valA, pB, shareB: sB.share, valB, impact, marketChange };
+                    return { 
+                        id, name: sB.name || sA.name, status, status_rank: statusWeight[status], color, 
+                        pA, valA, pB, valB, shareA: sA.share, shareB: sB.share,
+                        impact: pB * (sB.share - sA.share), 
+                        marketChange: valB - valA 
+                    };
                 });
                 renderTable();
-            } catch (e) { alert("讀取錯誤。"); }
+            } catch (e) { alert("讀取錯誤"); }
         }
 
         function handleSort(key) {
@@ -181,31 +167,26 @@
             document.getElementById('tableHeader').innerHTML = activeCols.map(col => `
                 <th onclick="handleSort('${col}')" class="${colDef[col].class} ${sortState.key === col ? (sortState.asc ? 'sort-asc' : 'sort-desc') : ''}">
                     ${colDef[col].label}
-                </th>
-            `).join('');
+                </th>`).join('');
 
             currentData.sort((a, b) => {
                 let vA = a[sortState.key], vB = b[sortState.key];
-                if (typeof vA === 'string') return sortState.asc ? vA.localeCompare(vB) : vB.localeCompare(vA);
-                return sortState.asc ? vA - vB : vB - vA;
+                return sortState.asc ? (vA > vB ? 1 : -1) : (vA < vB ? 1 : -1);
             });
 
             document.getElementById('resTable').innerHTML = currentData.map(row => {
-                let html = `<tr class="hover:bg-slate-700/30 transition-all border-b border-slate-700/50">`;
+                let html = `<tr class="hover:bg-slate-700/30 border-b border-slate-700/50">`;
                 activeCols.forEach(col => {
+                    const val = row[col];
                     if (col === 'name') {
-                        html += `<td class="p-8"><b class="text-3xl">${row.name}</b><br><span class="text-xl font-mono text-slate-500">${row.id}</span></td>`;
+                        html += `<td class="p-8"><b>${row.name}</b><br><span class="text-xl text-slate-500 font-mono">${row.id}</span></td>`;
                     } else if (col === 'status_rank') {
-                        html += `<td><span class="px-6 py-2 border-2 border-current rounded-full font-black text-xl ${row.color}">${row.status}</span></td>`;
+                        html += `<td><span class="px-6 py-2 border-2 border-current rounded-full font-black ${row.color}">${row.status}</span></td>`;
                     } else if (col === 'impact' || col === 'marketChange') {
-                        const val = row[col];
-                        const fontSize = col === 'impact' ? 'text-5xl' : 'text-3xl';
-                        html += `<td class="text-right font-num ${fontSize} ${val > 0 ? 'text-red-400' : (val < 0 ? 'text-emerald-400' : 'text-slate-500')}">
+                        html += `<td class="text-right font-num ${val > 0 ? 'text-red-400' : (val < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                                  ${val > 0 ? '+' : ''}${Math.round(val).toLocaleString()}</td>`;
-                    } else if (['valA', 'valB', 'shareA', 'shareB'].includes(col)) {
-                        html += `<td class="text-right font-num font-bold text-slate-100">${Math.round(row[col]).toLocaleString()}</td>`;
                     } else {
-                        html += `<td class="text-right font-num text-slate-300">${row[col] || '-'}</td>`;
+                        html += `<td class="text-right font-num text-slate-100">${Math.round(val || 0).toLocaleString()}</td>`;
                     }
                 });
                 return html + `</tr>`;
