@@ -2,27 +2,24 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 持股市值監測 v24.0 - 字體對齊強化版</title>
+    <title>ETF 持股市值監測 v24.1 - 完整控制強化版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 1. 基礎 UI 字體放大 */
         .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.5rem; font-weight: 900; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.6; cursor: pointer; }
         
-        /* 2. 表頭字體 */
         th { white-space: nowrap; font-size: 1.4rem; padding: 2rem 1rem !important; cursor: pointer; transition: 0.2s; position: relative; }
         .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 8px; }
         
-        /* 3. 數據欄位：統一字體大小的核心設定 */
+        /* 數據欄位統一字體大小 */
         tbody tr td { 
-            font-size: 1.8rem !important; /* 強制所有數據欄位大小一致 */
+            font-size: 1.8rem !important; 
             padding: 2.5rem 1rem !important; 
             vertical-align: middle; 
             font-weight: 800;
         }
         .font-num { font-family: ui-monospace, SFMono-Regular, monospace; }
         
-        /* 4. 輔助樣式修正 */
         .config-input { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #94a3b8; outline: none; font-size: 1.1rem; }
         .col-toggle-label { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .col-toggle { transform: scale(1.6); accent-color: #3b82f6; cursor: pointer; }
@@ -50,13 +47,24 @@
             </div>
         </div>
 
-        <div class="bg-slate-800/50 p-6 rounded-3xl mb-6 border border-slate-700 flex flex-wrap gap-6 items-center">
-            <span class="text-blue-400 font-black italic text-2xl">VIEW SETTINGS:</span>
+        <div class="bg-slate-800/50 p-6 rounded-3xl mb-6 border border-slate-700 flex flex-wrap gap-8 items-center">
+            <span class="text-blue-400 font-black italic text-2xl">DISPLAY COLUMNS:</span>
             <label class="col-toggle-label opacity-50 cursor-not-allowed"><input type="checkbox" checked disabled class="col-toggle"> 標的</label>
-            <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="status_rank" class="col-toggle view-cfg"> 異動狀態</label>
-            <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="pB" class="col-toggle view-cfg"> B日股價</label>
-            <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="valB" class="col-toggle view-cfg"> B日市值</label>
-            <label class="col-toggle-label text-yellow-400"><input type="checkbox" checked onchange="renderTable()" data-col="impact" class="col-toggle view-cfg"> 加減碼金額</label>
+            <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="status_rank" class="col-toggle view-cfg"> 異動</label>
+            
+            <div class="h-8 w-px bg-slate-700 mx-2"></div> <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="pA" class="col-toggle view-cfg"> A價</label>
+            <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="shareA" class="col-toggle view-cfg"> A股數</label>
+            <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="valA" class="col-toggle view-cfg"> A市值</label>
+            
+            <div class="h-8 w-px bg-slate-700 mx-2"></div>
+            
+            <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="pB" class="col-toggle view-cfg"> B價</label>
+            <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="shareB" class="col-toggle view-cfg"> B股數</label>
+            <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="valB" class="col-toggle view-cfg"> B市值</label>
+            
+            <div class="h-8 w-px bg-slate-700 mx-2"></div>
+            
+            <label class="col-toggle-label text-yellow-400"><input type="checkbox" checked onchange="renderTable()" data-col="impact" class="col-toggle view-cfg"> 加減碼</label>
             <label class="col-toggle-label text-orange-400"><input type="checkbox" checked onchange="renderTable()" data-col="marketChange" class="col-toggle view-cfg"> 市值變動</label>
         </div>
 
@@ -71,7 +79,7 @@
                 <div class="md:col-span-3"><input id="dateA" type="date" class="date-input w-full"></div>
                 <div class="md:col-span-1 text-center pb-6 text-slate-600 font-black italic text-5xl">VS</div>
                 <div class="md:col-span-3"><input id="dateB" type="date" class="date-input w-full"></div>
-                <div class="md:col-span-2"><button onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-3xl font-black text-3xl shadow-lg transition">跑分析</button></div>
+                <div class="md:col-span-2"><button onclick="runAnalysis()" class="w-full bg-blue-600 hover:bg-blue-500 py-6 rounded-3xl font-black text-3xl shadow-lg transition active:scale-95">跑分析</button></div>
             </div>
         </div>
 
@@ -137,6 +145,7 @@
                     const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                     const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
                     const valA = sA.share * pA, valB = sB.share * pB;
+                    
                     let status = "持平", color = "text-slate-500";
                     if(sA.share === 0) { status = "新進"; color = "text-yellow-400"; }
                     else if(sB.share === 0) { status = "出清"; color = "text-red-500"; }
@@ -145,7 +154,7 @@
                     
                     return { 
                         id, name: sB.name || sA.name, status, status_rank: statusWeight[status], color, 
-                        pA, valA, pB, valB, shareA: sA.share, shareB: sB.share,
+                        pA, shareA: sA.share, valA, pB, shareB: sB.share, valB, 
                         impact: pB * (sB.share - sA.share), 
                         marketChange: valB - valA 
                     };
@@ -186,7 +195,7 @@
                         html += `<td class="text-right font-num ${val > 0 ? 'text-red-400' : (val < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                                  ${val > 0 ? '+' : ''}${Math.round(val).toLocaleString()}</td>`;
                     } else {
-                        html += `<td class="text-right font-num text-slate-100">${Math.round(val || 0).toLocaleString()}</td>`;
+                        html += `<td class="text-right font-num text-slate-100">${Number(val || 0).toLocaleString()}</td>`;
                     }
                 });
                 return html + `</tr>`;
