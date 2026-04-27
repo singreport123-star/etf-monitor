@@ -2,37 +2,37 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <title>ETF 持股市值監測 v25.0 - 工業強化發佈版</title>
+    <title>ETF 持股市值監測 v25.1 - 終極工業完整版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 基礎 UI 設定 */
         .date-input { background: #1e293b; color: white; border: 3px solid #3b82f6; padding: 14px; border-radius: 12px; cursor: pointer; font-size: 1.5rem; font-weight: 900; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); scale: 1.6; cursor: pointer; }
         
-        /* 滑動問題修復：強制橫向捲動容器 */
+        /* 捲動佈局修復 */
         .scroll-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 2rem; background: #1e293b; }
         table { min-width: max-content; width: 100%; border-collapse: collapse; }
         
-        th { white-space: nowrap; font-size: 1.4rem; padding: 2rem 1.5rem !important; cursor: pointer; background: #334155; position: sticky; top: 0; z-index: 20; }
+        th { white-space: nowrap; font-size: 1.4rem; padding: 2rem 1.5rem !important; cursor: pointer; background: #334155; position: sticky; top: 0; z-index: 20; border-bottom: 2px solid #475569; }
         .sort-icon::after { content: '⇅'; opacity: 0.2; margin-left: 8px; }
         .sort-asc::after { content: '↑'; opacity: 1; color: #60a5fa; }
         .sort-desc::after { content: '↓'; opacity: 1; color: #60a5fa; }
         
-        /* 數據一致化字體：1.8rem */
+        /* 數據統一字體：1.8rem */
         tbody tr td { font-size: 1.8rem !important; padding: 2.5rem 1.5rem !important; vertical-align: middle; font-weight: 800; white-space: nowrap; }
         .font-num { font-family: ui-monospace, SFMono-Regular, monospace; }
         
-        /* 合計列特別樣式 */
-        .footer-row { background: #0f172a !important; border-top: 4px solid #3b82f6 !important; }
-        .footer-row td { color: #60a5fa !important; font-size: 2rem !important; }
+        /* 合計列樣式 */
+        .footer-row { background: #0f172a !important; border-top: 5px solid #3b82f6 !important; }
+        .footer-row td { color: #60a5fa !important; font-size: 2.2rem !important; font-weight: 900 !important; }
 
         .config-input { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; color: #94a3b8; outline: none; font-size: 1.1rem; }
-        .col-toggle-label { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
+        .col-toggle-label { font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; padding: 4px 8px; border-radius: 8px; }
+        .col-toggle-label:hover { background: #334155; }
         .col-toggle { transform: scale(1.6); accent-color: #3b82f6; cursor: pointer; }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 p-8">
-    <div class="max-w-[2000px] mx-auto">
+    <div class="max-w-[2200px] mx-auto">
         
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
             <h1 class="text-6xl font-black text-blue-400 tracking-tighter italic">PORTFOLIO ANALYZER</h1>
@@ -58,14 +58,24 @@
             </div>
         </div>
 
-        <div class="bg-slate-800/50 p-6 rounded-3xl mb-6 border border-slate-700 flex flex-wrap gap-6 items-center overflow-x-auto">
+        <div class="bg-slate-800/50 p-6 rounded-3xl mb-6 border border-slate-700 flex flex-wrap gap-4 items-center overflow-x-auto">
             <span class="text-blue-400 font-black italic text-2xl mr-2">DISPLAY:</span>
             <label class="col-toggle-label opacity-50 cursor-not-allowed"><input type="checkbox" checked disabled class="col-toggle"> 標的</label>
             <label class="col-toggle-label"><input type="checkbox" checked onchange="renderTable()" data-col="status_rank" class="col-toggle view-cfg"> 異動</label>
-            <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="wA" class="col-toggle view-cfg"> A權重%</label>
+            
+            <div class="h-8 w-px bg-slate-700 mx-2"></div>
+            <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="pA" class="col-toggle view-cfg"> A價</label>
+            <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="shareA" class="col-toggle view-cfg"> A股數</label>
             <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="valA" class="col-toggle view-cfg"> A市值</label>
-            <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="wB" class="col-toggle view-cfg"> B權重%</label>
+            <label class="col-toggle-label text-slate-400"><input type="checkbox" onchange="renderTable()" data-col="wA" class="col-toggle view-cfg"> A權重%</label>
+            
+            <div class="h-8 w-px bg-slate-700 mx-2"></div>
+            <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="pB" class="col-toggle view-cfg"> B價</label>
+            <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="shareB" class="col-toggle view-cfg"> B股數</label>
             <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="valB" class="col-toggle view-cfg"> B市值</label>
+            <label class="col-toggle-label text-blue-300"><input type="checkbox" checked onchange="renderTable()" data-col="wB" class="col-toggle view-cfg"> B權重%</label>
+            
+            <div class="h-8 w-px bg-slate-700 mx-2"></div>
             <label class="col-toggle-label text-emerald-300"><input type="checkbox" checked onchange="renderTable()" data-col="wDiff" class="col-toggle view-cfg"> 權重差%</label>
             <label class="col-toggle-label text-yellow-400 font-black"><input type="checkbox" checked onchange="renderTable()" data-col="impact" class="col-toggle view-cfg"> 加減碼</label>
             <label class="col-toggle-label text-orange-400 font-black"><input type="checkbox" checked onchange="renderTable()" data-col="marketChange" class="col-toggle view-cfg"> 市值變動</label>
@@ -87,7 +97,7 @@
         </div>
 
         <div class="scroll-wrapper shadow-2xl border border-slate-700">
-            <table>
+            <table id="mainTable">
                 <thead class="bg-slate-700 text-slate-300 font-black uppercase">
                     <tr id="tableHeader"></tr>
                 </thead>
@@ -104,11 +114,15 @@
         const colDef = {
             name: { label: '標的', class: 'p-8 sort-icon' },
             status_rank: { label: '異動狀態', class: 'sort-icon text-center' },
-            wA: { label: 'A權重%', class: 'text-right sort-icon' },
+            pA: { label: 'A日價', class: 'text-right sort-icon' },
+            shareA: { label: 'A日股數', class: 'text-right sort-icon' },
             valA: { label: 'A日市值', class: 'text-right text-slate-400 sort-icon' },
-            wB: { label: 'B權重%', class: 'text-right text-blue-300 sort-icon' },
+            wA: { label: 'A權重%', class: 'text-right sort-icon' },
+            pB: { label: 'B日價', class: 'text-right text-blue-300 sort-icon' },
+            shareB: { label: 'B日股數', class: 'text-right sort-icon' },
             valB: { label: 'B日市值', class: 'text-right text-white sort-icon' },
-            wDiff: { label: '權重差異%', class: 'text-right text-emerald-300 sort-icon' },
+            wB: { label: 'B權重%', class: 'text-right text-blue-300 sort-icon' },
+            wDiff: { label: '權重差%', class: 'text-right text-emerald-300 sort-icon' },
             impact: { label: '加減碼金額', class: 'text-right bg-slate-600/40 text-yellow-400 sort-icon' },
             marketChange: { label: '市值變動', class: 'text-right text-orange-400 sort-icon' }
         };
@@ -124,20 +138,20 @@
 
         async function feedData(days) {
             const owner = document.getElementById('ghOwner').value, token = document.getElementById('ghToken').value;
-            if(!owner || !token) return alert("Missing GitHub Config");
+            if(!owner || !token) return alert("Missing Config");
             localStorage.setItem('ghOwner', owner); localStorage.setItem('ghToken', token);
             const res = await fetch(`https://api.github.com/repos/${owner}/etf-monitor/actions/workflows/verify.yml/dispatches`, {
                 method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
                 body: JSON.stringify({ ref: 'main', inputs: { days: String(days) } })
             });
-            if(res.ok) alert(`🚀 補貨指令已送出 (${days} 天)`);
+            if(res.ok) alert(`🚀 補貨指令送出 (${days} 天)`);
         }
 
         async function runAnalysis() {
             const etf = document.getElementById('etfId').value, dA = document.getElementById('dateA').value, dB = document.getElementById('dateB').value;
             try {
                 const [rA, rB] = await Promise.all([fetch(`data/${etf}/${dA}.json`), fetch(`data/${etf}/${dB}.json`)]);
-                if(!rA.ok || !rB.ok) return alert("資料缺失，請確認補貨狀態。");
+                if(!rA.ok || !rB.ok) return alert("資料缺失");
                 
                 const jsonA = await rA.json(), jsonB = await rB.json();
                 const mapA = Object.fromEntries(jsonA.holdings.map(s => [s.id, s]));
@@ -145,7 +159,6 @@
                 const pA_pool = jsonA.market_prices, pB_pool = jsonB.market_prices;
                 const statusWeight = { "新進": 5, "加碼": 4, "持平": 3, "減碼": 2, "出清": 1 };
 
-                // 第一階段：計算全域總市值
                 let sumA = 0, sumB = 0;
                 const allIds = Array.from(new Set([...Object.keys(mapA), ...Object.keys(mapB)]));
                 allIds.forEach(id => {
@@ -153,14 +166,12 @@
                     sumB += (mapB[id]?.share || 0) * (Number(pB_pool[id]) || 0);
                 });
 
-                // 第二階段：計算個股指標與合計
                 totals = { valA: sumA, valB: sumB, impact: 0, marketChange: 0, wA: 0, wB: 0, wDiff: 0 };
 
                 currentData = allIds.map(id => {
                     const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                     const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
                     const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
-                    
                     const valA = sA.share * pA, valB = sB.share * pB;
                     const wA = sumA > 0 ? (valA / sumA) * 100 : 0;
                     const wB = sumB > 0 ? (valB / sumB) * 100 : 0;
@@ -169,7 +180,7 @@
 
                     totals.impact += impact;
                     totals.marketChange += mChange;
-                    totals.wA += wA; totals.wB += wB; 
+                    totals.wA += wA; totals.wB += wB;
 
                     let status = "持平", color = "text-slate-500";
                     if(sA.share === 0) { status = "新進"; color = "text-yellow-400"; }
@@ -179,12 +190,13 @@
 
                     return { 
                         id, name: sB.name || sA.name, status, status_rank: statusWeight[status], color,
-                        valA, valB, wA, wB, wDiff: wB - wA, impact, marketChange: mChange 
+                        pA, shareA: sA.share, valA, pB, shareB: sB.share, valB,
+                        wA, wB, wDiff: wB - wA, impact, marketChange: mChange 
                     };
                 });
                 totals.wDiff = totals.wB - totals.wA;
                 renderTable();
-            } catch (e) { alert("讀取錯誤。"); }
+            } catch (e) { alert("讀取錯誤"); }
         }
 
         function handleSort(key) {
@@ -196,7 +208,6 @@
         function renderTable() {
             const activeCols = ['name'];
             document.querySelectorAll('.view-cfg:checked').forEach(el => activeCols.push(el.dataset.col));
-
             document.getElementById('tableHeader').innerHTML = activeCols.map(col => `
                 <th onclick="handleSort('${col}')" class="${colDef[col].class} ${sortState.key === col ? (sortState.asc ? 'sort-asc' : 'sort-desc') : ''}">
                     ${colDef[col].label}
@@ -210,32 +221,31 @@
             const bodyHtml = currentData.map(row => {
                 let html = `<tr class="hover:bg-slate-700/30 border-b border-slate-700/50">`;
                 activeCols.forEach(col => {
+                    const val = row[col];
                     if (col === 'name') {
                         html += `<td class="p-8"><b class="text-3xl">${row.name}</b><br><span class="text-xl text-slate-500 font-mono">${row.id}</span></td>`;
                     } else if (col === 'status_rank') {
                         html += `<td class="text-center"><span class="px-6 py-2 border-2 border-current rounded-full font-black ${row.color}">${row.status}</span></td>`;
                     } else if (['wA', 'wB', 'wDiff'].includes(col)) {
-                        const val = row[col];
                         html += `<td class="text-right font-num ${val > 0 && col==='wDiff' ? 'text-red-400' : (val < 0 && col==='wDiff' ? 'text-emerald-400' : 'text-slate-100')}">
                                  ${val.toFixed(2)}%</td>`;
                     } else if (['impact', 'marketChange'].includes(col)) {
-                        const val = row[col];
                         html += `<td class="text-right font-num ${val > 0 ? 'text-red-400' : (val < 0 ? 'text-emerald-400' : 'text-slate-500')}">
                                  ${val > 0 ? '+' : ''}${Math.round(val).toLocaleString()}</td>`;
                     } else {
-                        html += `<td class="text-right font-num text-slate-100">${Math.round(row[col] || 0).toLocaleString()}</td>`;
+                        html += `<td class="text-right font-num text-slate-100">${Number(val || 0).toLocaleString()}</td>`;
                     }
                 });
                 return html + `</tr>`;
             }).join('');
 
-            // 合計項渲染
             let totalHtml = `<tr class="footer-row">`;
             activeCols.forEach(col => {
                 if (col === 'name') totalHtml += `<td class="p-8 font-black">TOTAL 合計</td>`;
                 else if (col === 'status_rank') totalHtml += `<td></td>`;
                 else if (['wA', 'wB', 'wDiff'].includes(col)) totalHtml += `<td class="text-right font-num">${totals[col].toFixed(2)}%</td>`;
-                else totalHtml += `<td class="text-right font-num">${Math.round(totals[col] || 0).toLocaleString()}</td>`;
+                else if (totals[col] !== undefined) totalHtml += `<td class="text-right font-num">${Math.round(totals[col]).toLocaleString()}</td>`;
+                else totalHtml += `<td></td>`;
             });
             totalHtml += `</tr>`;
 
