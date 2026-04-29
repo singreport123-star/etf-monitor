@@ -133,11 +133,11 @@
         window.onload = () => {
             document.getElementById('ghOwner').value = localStorage.getItem('ghOwner') || '';
             document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
-// --- NEW FEATURE START ---
             const now = new Date();
+// --- NEW FEATURE START ---
             document.getElementById('dateB').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
-            document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
 // --- NEW FEATURE END ---
+            document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
             renderTable();
         };
 
@@ -255,7 +255,6 @@
 
             document.getElementById('resTable').innerHTML = bodyHtml + totalHtml;
         }
-// --- END OF FILE ---
     </script>
 </body>
 </html>
