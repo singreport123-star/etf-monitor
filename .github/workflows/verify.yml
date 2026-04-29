@@ -1,5 +1,7 @@
 name: ETF 數據採集與批量補貨
 on:
+  schedule:
+    - cron: '0 13 * * *'
   workflow_dispatch:
     inputs:
       days:
@@ -22,6 +24,7 @@ jobs:
       - name: 執行批量採集
         run: |
           DAYS=${{ github.event.inputs.days }}
+          if [ "${{ github.event_name }}" = "schedule" ]; then DAYS=5; fi
           echo "🚀 啟動批量餵食，目標天數: $DAYS 天"
           
           # 從 0 開始回溯到 DAYS-1
@@ -38,3 +41,5 @@ jobs:
           git add data/
           git commit -m "Manual Feeding: $DAYS days batch update" || exit 0
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
