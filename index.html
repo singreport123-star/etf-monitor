@@ -133,14 +133,11 @@
         window.onload = () => {
             document.getElementById('ghOwner').value = localStorage.getItem('ghOwner') || '';
             document.getElementById('ghToken').value = localStorage.getItem('ghToken') || '';
-            // --- NEW FEATURE START ---
+// --- NEW FEATURE START ---
             const now = new Date();
-            const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-            const beforeYesterday = new Date(now); beforeYesterday.setDate(now.getDate() - 2);
-
-            document.getElementById('dateB').value = yesterday.toISOString().split('T')[0];
-            document.getElementById('dateA').value = beforeYesterday.toISOString().split('T')[0];
-            // --- NEW FEATURE END ---
+            document.getElementById('dateB').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
+            document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
+// --- NEW FEATURE END ---
             renderTable();
         };
 
@@ -178,7 +175,7 @@
                 currentData = allIds.map(id => {
                     const sA = mapA[id] || { share: 0, name: mapB[id]?.name };
                     const sB = mapB[id] || { share: 0, name: mapA[id]?.name };
-  0                 const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
+                    const pA = Number(pA_pool[id]) || 0, pB = Number(pB_pool[id]) || 0;
                     const valA = sA.share * pA, valB = sB.share * pB;
                     const wA = sumA > 0 ? (valA / sumA) * 100 : 0;
                     const wB = sumB > 0 ? (valB / sumB) * 100 : 0;
