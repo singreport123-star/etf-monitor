@@ -1,33 +1,54 @@
 name: ETF 數據採集與批量補貨
+
 on:
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '0 13 * * *'   # 每天固定時間
   workflow_dispatch:
     inputs:
       days:
         description: '要補抓的天數'
         default: '1'
         required: false
+  repository_dispatch:
+    types: [run-bot]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # 讓 git push 穩定可用
+
+    env:
+      INPUT_DAYS: ${{ github.event.inputs.days }}
+      DISPATCH_DAYS: ${{ github.event.client_payload.days }}
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+
       - name: Install dependencies
         run: pip install requests yfinance
-      
+
       - name: 執行批量採集
         run: |
-          DAYS=${{ github.event.inputs.days }}
-          if [ "${{ github.event_name }}" = "schedule" ]; then DAYS=5; fi
+          # 優先順序：
+          # 1. repository_dispatch days
+          # 2. workflow_dispatch days
+          # 3. default = 1
+
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            DAYS=${DISPATCH_DAYS:-1}
+          else
+            DAYS=${INPUT_DAYS:-1}
+          fi
+
           echo "🚀 啟動批量餵食，目標天數: $DAYS 天"
-          
-          # 從 0 開始回溯到 DAYS-1
+
           for i in $(seq 0 $((DAYS-1))); do
             export TARGET_DATE=$(date -d "$i days ago" +%Y-%m-%d)
             echo "--- 📅 正在採集日期: $TARGET_DATE ---"
@@ -38,8 +59,11 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action Bot"
+
           git add data/
-          git commit -m "Manual Feeding: $DAYS days batch update" || exit 0
+
+          # 避免空 commit 爆炸
+          git diff --cached --quiet && echo "No changes" && exit 0
+
+          git commit -m "Auto/Manual Update: ${DAYS} days batch update"
           git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
