@@ -270,7 +270,7 @@
 
             const now = new Date();
 
-            document.getElementById('dateB').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
+            document.getElementById('dateB').value = new Date(now.setDate(now.getDate())).toISOString().split('T')[0];
 
             document.getElementById('dateA').value = new Date(now.setDate(now.getDate() - 1)).toISOString().split('T')[0];
 
