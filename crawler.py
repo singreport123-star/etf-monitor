@@ -14,7 +14,6 @@ def get_yahoo_prices(etf_id, stock_ids, target_date_str):
     tickers = [f"{sid}.TW" for sid in clean_ids] + [f"{sid}.TWO" for sid in clean_ids]
     try:
         dt = datetime.strptime(target_date_str, "%Y-%m-%d")
-        # 抓取最近 10 天，確保能定位到最後一個有效收盤價
         data = yf.download(tickers, start=(dt - timedelta(days=10)).strftime("%Y-%m-%d"), 
                            end=(dt + timedelta(days=1)).strftime("%Y-%m-%d"), group_by='ticker', progress=False)
         for sid in clean_ids:
@@ -33,7 +32,6 @@ def process_and_save(etf_id, holdings, target_date):
     folder = f"data/{etf_id}"
     os.makedirs(folder, exist_ok=True)
     
-    # 建立聯集名單：今日有的 + 該 ETF 歷史出現過的 (確保出清股也有當天價)
     universe_ids = set([s['id'] for s in holdings])
     if os.path.exists(folder):
         for f in os.listdir(folder):
@@ -44,15 +42,8 @@ def process_and_save(etf_id, holdings, target_date):
                         for s in old.get('holdings', []): universe_ids.add(s['id'])
                 except: continue
     
-    # 抓取該日期當天的價格
     prices = get_yahoo_prices(etf_id, list(universe_ids), target_date)
-    
-    final_data = {
-        "etf_id": etf_id,
-        "date": target_date,
-        "holdings": holdings,
-        "market_prices": prices
-    }
+    final_data = {"etf_id": etf_id, "date": target_date, "holdings": holdings, "market_prices": prices}
     
     with open(f"{folder}/{target_date}.json", 'w', encoding='utf-8') as f:
         json.dump(final_data, f, ensure_ascii=False, indent=4)
@@ -71,10 +62,9 @@ def run_00981A(target_date):
         process_and_save("00981A", h, target_date)
     except Exception as e: print(f"❌ 00981A 失敗: {e}")
 
-# --- ETF 爬蟲：群益 00982A (回歸原始穩定版) ---
+# --- ETF 爬蟲：群益 00982A ---
 def run_00982A(target_date):
     print("📡 啟動 00982A (群益) 採集...")
-    # 嘗試兩種日期格式，因為群益 API 對格式很挑剔
     formats = [target_date, target_date.replace("-", "/")]
     for fmt in formats:
         try:
@@ -85,34 +75,52 @@ def run_00982A(target_date):
             if stocks:
                 h = [{"id": s['stocNo'].strip(), "name": s['stocName'], "share": s['share']} for s in stocks]
                 process_and_save("00982A", h, target_date)
-                return # 成功就跳出
+                return 
         except: continue
-    print("❌ 00982A 採集失敗 (所有格式均無效)")
+    print("❌ 00982A 採集失敗")
 
-# --- ETF 爬蟲：中信 00995A (全自動金鑰版) ---
+# --- ETF 爬蟲：中信 00995A (Debug 強化版) ---
 def run_00995A(target_date):
     print("📡 啟動 00995A (中信) 採集...")
+    session = requests.Session()
+    # 建立極度擬真的瀏覽器標頭
+    std_headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://www.ctbcinvestments.com/Etf/00653201/Combination",
+        "Origin": "https://www.ctbcinvestments.com"
+    }
     try:
-        # 使用 Session 保持連線狀態
-        session = requests.Session()
-        headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.ctbcinvestments.com/"}
-        
-        # 第一步：獲取動態 Token (鑰匙)
+        # 1. 取得 AuthToken
         auth_url = "https://www.ctbcinvestments.com/api/Etf/AuthToken"
-        auth_res = session.get(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=headers, timeout=15)
-        dynamic_token = auth_res.json().get('Data', '')
+        auth_res = session.get(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
         
-        if not dynamic_token:
-            print("❌ 00995A 無法取得動態 Token，請檢查中信伺服器狀態")
+        if auth_res.status_code != 200:
+            print(f"❌ AuthToken 請求失敗，狀態碼: {auth_res.status_code}")
+            return
+            
+        try:
+            dynamic_token = auth_res.json().get('Data', '')
+        except:
+            print(f"❌ AuthToken 解析失敗，伺服器回傳內容首 100 字: {auth_res.text[:100]}")
             return
 
-        # 第二步：使用剛領到的鑰匙抓取資料
+        # 2. 取得持股權重
         api_url = "https://www.ctbcinvestments.com/api/Etf/ETFHoldingWeight"
         iso_date = f"{target_date}T00:00:00.000Z"
         params = {"FID": "E0036", "StartDate": iso_date, "token": dynamic_token}
         
-        r = session.get(api_url, params=params, headers=headers, timeout=20)
-        res_json = r.json()
+        r = session.get(api_url, params=params, headers=std_headers, timeout=20)
+        
+        if r.status_code != 200:
+            print(f"❌ 持股數據請求失敗，狀態碼: {r.status_code}")
+            return
+            
+        try:
+            res_json = r.json()
+        except:
+            print(f"❌ 持股數據解析失敗 (非 JSON)，伺服器回傳: {r.text[:100]}")
+            return
         
         details = res_json.get('Data', {}).get('FundAssetsDetail', [])
         stock_section = next((i for i in details if i.get('Code') == 'STOCK'), None)
@@ -122,10 +130,10 @@ def run_00995A(target_date):
                  for s in stock_section.get('Data', [])]
             process_and_save("00995A", h, target_date)
         else:
-            print(f"⚠️ 00995A 在 {target_date} 查無明細 (可能該日未更新或格式變動)")
+            print(f"⚠️ 00995A 在 {target_date} 查無持股數據")
             
     except Exception as e:
-        print(f"❌ 00995A 失敗: {e}")
+        print(f"❌ 00995A 執行異常: {e}")
 
 if __name__ == "__main__":
     t_date = os.environ.get("TARGET_DATE", datetime.now().strftime("%Y-%m-%d"))
