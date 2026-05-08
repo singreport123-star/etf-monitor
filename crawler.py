@@ -105,7 +105,7 @@ def run_00995A(target_date):
         # 2. 取得持股權重 (token 同時放 URL query string 與 JSON body，StartDate 用當下 UTC 時間)
         api_url = f"{base_url}/etf/ETFHoldingWeight"
         now = datetime.utcnow()
-        iso_date = now.strftime("%Y-%m-%dT%H:%M:%S.") + f"{now.microsecond // 1000:03d}Z"
+        iso_date = f"{target_date}T{now.strftime('%H:%M:%S.')}{now.microsecond // 1000:03d}Z"
         payload = {"FID": "E0036", "StartDate": iso_date, "token": dynamic_token}
         
         r = session.post(api_url, params={"token": dynamic_token}, json=payload, headers=std_headers, timeout=20)
