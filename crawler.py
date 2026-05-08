@@ -89,15 +89,27 @@ def run_00982A(target_date):
         except: continue
     print("❌ 00982A 採集失敗 (所有格式均無效)")
 
-# --- ETF 爬蟲：中信 00995A ---
+# --- ETF 爬蟲：中信 00995A (參數校準版) ---
 def run_00995A(target_date):
     print("📡 啟動 00995A (中信) 採集...")
     try:
         api_url = "https://www.ctbcinvestments.com/api/Etf/ETFHoldingWeight"
-        # 嘗試在參數中補上日期，看看中信是否隱藏支援歷史查詢 (格式: YYYY/MM/DD)
-        q_date = target_date.replace("-", "/")
-        params = {"token": "www.ctbcinvestments.com", "fundCode": "00653201", "date": q_date}
-        headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.ctbcinvestments.com/"}
+        # 將日期轉為 ISO 格式：YYYY-MM-DDT16:00:00.000Z (模擬官網請求)
+        iso_date = f"{target_date}T16:00:00.000Z"
+        
+        # 這是您剛才抓到的關鍵 Token (暫時使用此 Token 進行測試)
+        target_token = "B/KwDM6qbtPXlCW6sL+ILvXNI3MeFn59YJEmRVA4IEYFrEyaA3PMJ/JbveThhv1h/+D/rflxvTexxTIRVe+Ohg==MTY0MzkyMTkyNjUyNjY4OA==024"
+        
+        params = {
+            "FID": "E0036", 
+            "StartDate": iso_date,
+            "token": target_token
+        }
+        
+        headers = {
+            "User-Agent": "Mozilla/5.0",
+            "Referer": "https://www.ctbcinvestments.com/"
+        }
         
         r = requests.get(api_url, params=params, headers=headers, timeout=20)
         res_json = r.json()
@@ -110,19 +122,10 @@ def run_00995A(target_date):
                  for s in stock_section.get('Data', [])]
             process_and_save("00995A", h, target_date)
         else:
-            # 如果這一天沒資料，我們嘗試抓「最新」的作為墊檔，確保你有資料看
-            print(f"⚠️ 00995A 在 {target_date} 沒資料，嘗試抓取最新快照...")
-            params_latest = {"token": "www.ctbcinvestments.com", "fundCode": "00653201"}
-            r_latest = requests.get(api_url, params=params_latest, headers=headers, timeout=20)
-            res_latest = r_latest.json()
-            details_l = res_latest.get('Data', {}).get('FundAssetsDetail', [])
-            stock_l = next((i for i in details_l if i.get('Code') == 'STOCK'), None)
-            if stock_l:
-                h_l = [{"id": s['code_'].strip(), "name": s['name_'], "share": float(s['qty_'].replace(',', ''))} for s in stock_l.get('Data', [])]
-                process_and_save("00995A", h_l, target_date)
-            else:
-                print(f"❌ 00995A 徹底失敗，API回應內容: {r.text[:200]}")
-    except Exception as e: print(f"❌ 00995A 異常: {e}")
+            print(f"⚠️ 00995A 在 {target_date} 仍無數據，請確認 Token 是否過期或該日無存檔")
+            
+    except Exception as e:
+        print(f"❌ 00995A 失敗: {e}")
 
 if __name__ == "__main__":
     t_date = os.environ.get("TARGET_DATE", datetime.now().strftime("%Y-%m-%d"))
