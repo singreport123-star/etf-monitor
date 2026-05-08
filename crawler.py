@@ -79,20 +79,19 @@ def run_00982A(target_date):
         except: continue
     print("❌ 00982A 採集失敗")
 
-# --- ETF 爬蟲：中信 00995A (修正網域與門牌版) ---
+# --- ETF 爬蟲：中信 00995A (POST 修正版) ---
 def run_00995A(target_date):
     print("📡 啟動 00995A (中信) 採集...")
     session = requests.Session()
-    # 修正為正確的 .com.tw 網域與大寫 API 路徑
     base_url = "https://www.ctbcinvestments.com.tw/API"
     std_headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Referer": "https://www.ctbcinvestments.com.tw/Etf/00653201/Combination"
     }
     try:
-        # 1. 取得 AuthToken
+        # 1. 取得 AuthToken (修正為 POST)
         auth_url = f"{base_url}/home/AuthToken"
-        auth_res = session.get(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
+        auth_res = session.post(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
         
         if auth_res.status_code != 200:
             print(f"❌ AuthToken 請求失敗，狀態碼: {auth_res.status_code}")
@@ -103,12 +102,13 @@ def run_00995A(target_date):
             print("❌ 無法獲取有效 Token")
             return
 
-        # 2. 取得持股權重 (假設路徑與 AuthToken 同級)
+        # 2. 取得持股權重 (修正為 POST 與 JSON 承載資料)
         api_url = f"{base_url}/Etf/ETFHoldingWeight"
         iso_date = f"{target_date}T00:00:00.000Z"
-        params = {"FID": "E0036", "StartDate": iso_date, "token": dynamic_token}
+        # 根據 Payload 證據，參數應放入 JSON Body 中
+        payload = {"FID": "E0036", "StartDate": iso_date, "token": dynamic_token}
         
-        r = session.get(api_url, params=params, headers=std_headers, timeout=20)
+        r = session.post(api_url, json=payload, headers=std_headers, timeout=20)
         res_json = r.json()
         
         details = res_json.get('Data', {}).get('FundAssetsDetail', [])
