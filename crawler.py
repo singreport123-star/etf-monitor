@@ -79,48 +79,37 @@ def run_00982A(target_date):
         except: continue
     print("❌ 00982A 採集失敗")
 
-# --- ETF 爬蟲：中信 00995A (Debug 強化版) ---
+# --- ETF 爬蟲：中信 00995A (修正網域與門牌版) ---
 def run_00995A(target_date):
     print("📡 啟動 00995A (中信) 採集...")
     session = requests.Session()
-    # 建立極度擬真的瀏覽器標頭
+    # 修正為正確的 .com.tw 網域與大寫 API 路徑
+    base_url = "https://www.ctbcinvestments.com.tw/API"
     std_headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Referer": "https://www.ctbcinvestments.com/Etf/00653201/Combination",
-        "Origin": "https://www.ctbcinvestments.com"
+        "Referer": "https://www.ctbcinvestments.com.tw/Etf/00653201/Combination"
     }
     try:
         # 1. 取得 AuthToken
-        auth_url = "https://www.ctbcinvestments.com/api/Etf/AuthToken"
+        auth_url = f"{base_url}/home/AuthToken"
         auth_res = session.get(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
         
         if auth_res.status_code != 200:
             print(f"❌ AuthToken 請求失敗，狀態碼: {auth_res.status_code}")
             return
             
-        try:
-            dynamic_token = auth_res.json().get('Data', '')
-        except:
-            print(f"❌ AuthToken 解析失敗，伺服器回傳內容首 100 字: {auth_res.text[:100]}")
+        dynamic_token = auth_res.json().get('Data', '')
+        if not dynamic_token:
+            print("❌ 無法獲取有效 Token")
             return
 
-        # 2. 取得持股權重
-        api_url = "https://www.ctbcinvestments.com/api/Etf/ETFHoldingWeight"
+        # 2. 取得持股權重 (假設路徑與 AuthToken 同級)
+        api_url = f"{base_url}/Etf/ETFHoldingWeight"
         iso_date = f"{target_date}T00:00:00.000Z"
         params = {"FID": "E0036", "StartDate": iso_date, "token": dynamic_token}
         
         r = session.get(api_url, params=params, headers=std_headers, timeout=20)
-        
-        if r.status_code != 200:
-            print(f"❌ 持股數據請求失敗，狀態碼: {r.status_code}")
-            return
-            
-        try:
-            res_json = r.json()
-        except:
-            print(f"❌ 持股數據解析失敗 (非 JSON)，伺服器回傳: {r.text[:100]}")
-            return
+        res_json = r.json()
         
         details = res_json.get('Data', {}).get('FundAssetsDetail', [])
         stock_section = next((i for i in details if i.get('Code') == 'STOCK'), None)
