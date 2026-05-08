@@ -89,29 +89,29 @@ def run_00982A(target_date):
         except: continue
     print("❌ 00982A 採集失敗 (所有格式均無效)")
 
-# --- ETF 爬蟲：中信 00995A (參數校準版) ---
+# --- ETF 爬蟲：中信 00995A (全自動金鑰版) ---
 def run_00995A(target_date):
     print("📡 啟動 00995A (中信) 採集...")
     try:
+        # 使用 Session 保持連線狀態
+        session = requests.Session()
+        headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://www.ctbcinvestments.com/"}
+        
+        # 第一步：獲取動態 Token (鑰匙)
+        auth_url = "https://www.ctbcinvestments.com/api/Etf/AuthToken"
+        auth_res = session.get(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=headers, timeout=15)
+        dynamic_token = auth_res.json().get('Data', '')
+        
+        if not dynamic_token:
+            print("❌ 00995A 無法取得動態 Token，請檢查中信伺服器狀態")
+            return
+
+        # 第二步：使用剛領到的鑰匙抓取資料
         api_url = "https://www.ctbcinvestments.com/api/Etf/ETFHoldingWeight"
-        # 將日期轉為 ISO 格式：YYYY-MM-DDT16:00:00.000Z (模擬官網請求)
-        iso_date = f"{target_date}T16:00:00.000Z"
+        iso_date = f"{target_date}T00:00:00.000Z"
+        params = {"FID": "E0036", "StartDate": iso_date, "token": dynamic_token}
         
-        # 這是您剛才抓到的關鍵 Token (暫時使用此 Token 進行測試)
-        target_token = "B/KwDM6qbtPXlCW6sL+ILvXNI3MeFn59YJEmRVA4IEYFrEyaA3PMJ/JbveThhv1h/+D/rflxvTexxTIRVe+Ohg==MTY0MzkyMTkyNjUyNjY4OA==024"
-        
-        params = {
-            "FID": "E0036", 
-            "StartDate": iso_date,
-            "token": target_token
-        }
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Referer": "https://www.ctbcinvestments.com/"
-        }
-        
-        r = requests.get(api_url, params=params, headers=headers, timeout=20)
+        r = session.get(api_url, params=params, headers=headers, timeout=20)
         res_json = r.json()
         
         details = res_json.get('Data', {}).get('FundAssetsDetail', [])
@@ -122,7 +122,7 @@ def run_00995A(target_date):
                  for s in stock_section.get('Data', [])]
             process_and_save("00995A", h, target_date)
         else:
-            print(f"⚠️ 00995A 在 {target_date} 仍無數據，請確認 Token 是否過期或該日無存檔")
+            print(f"⚠️ 00995A 在 {target_date} 查無明細 (可能該日未更新或格式變動)")
             
     except Exception as e:
         print(f"❌ 00995A 失敗: {e}")
