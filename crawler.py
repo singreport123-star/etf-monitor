@@ -89,7 +89,23 @@ def run_00982A(target_date):
         except: continue
     print("❌ 00982A 採集失敗 (所有格式均無效)")
 
+# --- ETF 爬蟲：中信 00995A ---
+def run_00995A(target_date):
+    print("📡 啟動 00995A (中信) 採集...")
+    try:
+        api_url = "https://www.ctbcinvestments.com/api/Etf/ETFHoldingWeight"
+        params = {"token": "www.ctbcinvestments.com", "fundCode": "00653201"}
+        r = requests.get(api_url, params=params, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
+        details = r.json().get('Data', {}).get('FundAssetsDetail', [])
+        stock_section = next((i for i in details if i.get('Code') == 'STOCK'), None)
+        if stock_section:
+            h = [{"id": s['code_'].strip(), "name": s['name_'], "share": float(s['qty_'].replace(',', ''))} 
+                 for s in stock_section.get('Data', [])]
+            process_and_save("00995A", h, target_date)
+    except Exception as e: print(f"❌ 00995A 失敗: {e}")
+
 if __name__ == "__main__":
     t_date = os.environ.get("TARGET_DATE", datetime.now().strftime("%Y-%m-%d"))
     run_00981A(t_date)
     run_00982A(t_date)
+    run_00995A(t_date)
