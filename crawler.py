@@ -91,7 +91,7 @@ def run_00995A(target_date):
     try:
         # 1. 取得 AuthToken (修正為 POST)
         auth_url = f"{base_url}/home/AuthToken"
-        auth_res = session.post(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
+        auth_res = session.post(auth_url, params={"token": "www.ctbcinvestments.com"}, json={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
         
         if auth_res.status_code != 200:
             print(f"❌ AuthToken 請求失敗，狀態碼: {auth_res.status_code}")
