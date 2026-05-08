@@ -89,20 +89,33 @@ def run_00982A(target_date):
         except: continue
     print("❌ 00982A 採集失敗 (所有格式均無效)")
 
-# --- ETF 爬蟲：中信 00995A ---
+# --- ETF 爬蟲：中信 00995A (加強穩定版) ---
 def run_00995A(target_date):
     print("📡 啟動 00995A (中信) 採集...")
     try:
         api_url = "https://www.ctbcinvestments.com/api/Etf/ETFHoldingWeight"
+        # 增加 Referer 與更完整的 User-Agent，防止中信防火牆攔截
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://www.ctbcinvestments.com/Etf/00653201/Combination"
+        }
         params = {"token": "www.ctbcinvestments.com", "fundCode": "00653201"}
-        r = requests.get(api_url, params=params, headers={"User-Agent": "Mozilla/5.0"}, timeout=15)
-        details = r.json().get('Data', {}).get('FundAssetsDetail', [])
+        r = requests.get(api_url, params=params, headers=headers, timeout=20)
+        
+        # 取得資料並尋找股票區塊
+        res_json = r.json()
+        details = res_json.get('Data', {}).get('FundAssetsDetail', [])
         stock_section = next((i for i in details if i.get('Code') == 'STOCK'), None)
-        if stock_section:
+        
+        if stock_section and stock_section.get('Data'):
             h = [{"id": s['code_'].strip(), "name": s['name_'], "share": float(s['qty_'].replace(',', ''))} 
                  for s in stock_section.get('Data', [])]
             process_and_save("00995A", h, target_date)
-    except Exception as e: print(f"❌ 00995A 失敗: {e}")
+        else:
+            # 如果這一天沒資料 (例如週末)，會印出這行
+            print(f"⚠️ 00995A 在 {target_date} 沒抓到持股明細 (API 回傳內容為空)")
+    except Exception as e:
+        print(f"❌ 00995A 採集過程噴錯: {e}")
 
 if __name__ == "__main__":
     t_date = os.environ.get("TARGET_DATE", datetime.now().strftime("%Y-%m-%d"))
