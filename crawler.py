@@ -86,13 +86,10 @@ def run_00995A(target_date):
     base_url = "https://www.ctbcinvestments.com.tw/API"
     std_headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://www.ctbcinvestments.com.tw/Etf/00653201/Combination",
-        "Content-Type": "application/json;charset=UTF-8",
-        "Origin": "https://www.ctbcinvestments.com.tw",
-        "X-Requested-With": "XMLHttpRequest"
+        "Referer": "https://www.ctbcinvestments.com.tw/Etf/00653201/Combination"
     }
     try:
-        # 1. 取得 AuthToken
+        # 1. 取得 AuthToken (修正為 POST)
         auth_url = f"{base_url}/home/AuthToken"
         auth_res = session.post(auth_url, params={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
         
@@ -100,23 +97,18 @@ def run_00995A(target_date):
             print(f"❌ AuthToken 請求失敗，狀態碼: {auth_res.status_code}")
             return
             
-        dynamic_token = auth_res.json().get('Data', {}).get('token', '')  # ✅ 修正點
-        
+        dynamic_token = auth_res.json().get('Data', {}).get('token', '')
         if not dynamic_token:
             print("❌ 無法獲取有效 Token")
             return
 
-        # 2. 取得持股權重
+        # 2. 取得持股權重 (token 同時放 URL query string 與 JSON body，StartDate 用當下 UTC 時間)
         api_url = f"{base_url}/etf/ETFHoldingWeight"
-        iso_date = f"{target_date}T00:00:00.000Z"
+        now = datetime.utcnow()
+        iso_date = now.strftime("%Y-%m-%dT%H:%M:%S.") + f"{now.microsecond // 1000:03d}Z"
+        payload = {"FID": "E0036", "StartDate": iso_date, "token": dynamic_token}
         
-        payload = {
-            "FID": "E0036",
-            "StartDate": iso_date,
-            "token": dynamic_token
-        }
-        
-        r = session.post(api_url, json=payload, headers=std_headers, timeout=20)
+        r = session.post(api_url, params={"token": dynamic_token}, json=payload, headers=std_headers, timeout=20)
         res_json = r.json()
         
         details = res_json.get('Data', {}).get('FundAssetsDetail', [])
