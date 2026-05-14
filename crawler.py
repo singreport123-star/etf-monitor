@@ -4,41 +4,71 @@ import os
 import yfinance as yf
 from datetime import datetime, timedelta
 
-# --- 輔助工具：匯率引擎 ---
-def get_fx_rate(target_date_dt):
-    """抓取指定日期的美金對台幣收盤匯率"""
+# --- 核心配置：全球市場對齊矩陣 ---
+MARKET_MAP = {
+    "US": {"suffix": "",     "fx": "USDTWD=X"},
+    "JP": {"suffix": ".T",   "fx": "JPYTWD=X"},
+    "KS": {"suffix": ".KS",  "fx": "KRWTWD=X"},
+    "GY": {"suffix": ".DE",  "fx": "EURTWD=X"},
+    "FP": {"suffix": ".PA",  "fx": "EURTWD=X"},
+    "HK": {"suffix": ".HK",  "fx": "HKDTWD=X"},
+    "CH": {"suffix": ".SS",  "fx": "CNYTWD=X"}, # 預設上海，代碼判斷在 resolver 處理
+}
+
+# --- 輔助工具：全球匯率引擎 ---
+def get_global_fx_rates(target_date_dt):
+    """批次獲取所有必要匯率"""
+    fx_tickers = list(set([m["fx"] for m in MARKET_MAP.values()]))
+    rates = {"TWD": 1.0}
     try:
-        fx_code = "USDTWD=X"
-        data = yf.download(fx_code, 
+        data = yf.download(fx_tickers, 
                            start=(target_date_dt - timedelta(days=7)).strftime("%Y-%m-%d"),
                            end=(target_date_dt + timedelta(days=1)).strftime("%Y-%m-%d"), 
                            auto_adjust=False, progress=False)
         if not data.empty:
-            return float(data['Close'].iloc[-1])
+            for fx in fx_tickers:
+                # 取得該匯率最新收盤價
+                if fx in data['Close']:
+                    val = data['Close'][fx].dropna()
+                    if not val.empty:
+                        rates[fx] = float(val.iloc[-1])
     except: pass
-    return 31.5  # 萬一失敗的保底匯率
+    # 保底匯率，防止網路波動導致數據歸零
+    return rates
 
-# --- 核心邏輯：股價對齊 (支持美股自動換匯) ---
+# --- 核心邏輯：股價對齊 (支持八國聯軍標的) ---
 def get_yahoo_prices(etf_id, stock_ids, target_date_str):
     prices = {}
     if not stock_ids: return {}
     clean_ids = list(set([str(sid).strip() for sid in stock_ids if sid]))
     dt = datetime.strptime(target_date_str, "%Y-%m-%d")
     
-    # 判斷是否需要換匯 (只有 00988A 需要)
-    fx_rate = get_fx_rate(dt) if etf_id == "00988A" else 1.0
-    print(f"--- [{etf_id}] 抓取 {target_date_str} 價格 (基準匯率: {fx_rate:.2f}) ---")
+    # 獲取全球匯率矩陣
+    fx_matrix = get_global_fx_rates(dt)
+    print(f"--- [{etf_id}] 啟動全球價格對齊 (日期: {target_date_str}) ---")
     
-    # 建立 Yahoo Ticker 映射表
+    # 建立 Yahoo Ticker 映射表與匯率關聯
     ticker_map = {}
     for sid in clean_ids:
-        if " US" in sid:
-            yahoo_ticker = sid.split(" ")[0]
-            ticker_map[yahoo_ticker] = {"id": sid, "is_us": True}
+        # 1. 識別市場
+        parts = sid.split(" ")
+        ticker_base = parts[0]
+        market_code = parts[1] if len(parts) > 1 else "TWD"
+        
+        if market_code in MARKET_MAP:
+            # 全球標的處理
+            m_cfg = MARKET_MAP[market_code]
+            suffix = m_cfg["suffix"]
+            # 中國市場特殊判斷: 60xxxx 為上海(.SS), 其餘為深圳(.SZ)
+            if market_code == "CH" and not ticker_base.startswith("60"):
+                suffix = ".SZ"
+            
+            yahoo_ticker = f"{ticker_base}{suffix}"
+            ticker_map[yahoo_ticker] = {"id": sid, "fx_key": m_cfg["fx"]}
         else:
-            # 台股嘗試兩種後綴
-            ticker_map[f"{sid}.TW"] = {"id": sid, "is_us": False}
-            ticker_map[f"{sid}.TWO"] = {"id": sid, "is_us": False}
+            # 台灣標的處理 (保留原有的雙後綴嘗試邏輯)
+            ticker_map[f"{sid}.TW"] = {"id": sid, "fx_key": "TWD"}
+            ticker_map[f"{sid}.TWO"] = {"id": sid, "fx_key": "TWD"}
 
     tickers = list(ticker_map.keys())
     try:
@@ -49,18 +79,19 @@ def get_yahoo_prices(etf_id, stock_ids, target_date_str):
         
         for yt, info in ticker_map.items():
             sid = info["id"]
-            if yt in data.columns.levels[0]:
-                series = data[yt]['Close'].dropna()
+            fx_val = fx_matrix.get(info["fx_key"], 1.0)
+            
+            # yfinance 多標的結構處理
+            df = data[yt] if len(tickers) > 1 else data
+            if 'Close' in df:
+                series = df['Close'].dropna()
                 if not series.empty:
-                    # 如果已經有值(例如 .TW 抓到了)就跳過 .TWO
-                    if sid in prices and prices[sid] > 0: continue
+                    if sid in prices and prices[sid] > 0: continue # 避免 .TW/.TWO 重複
+                    raw_p = float(series.iloc[-1])
+                    prices[sid] = round(raw_p * fx_val, 2)
                     
-                    raw_price = float(series.iloc[-1])
-                    # 美股自動乘以匯率
-                    final_price = round(raw_price * fx_rate, 2) if info["is_us"] else round(raw_price, 2)
-                    prices[sid] = final_price
     except Exception as e:
-        print(f"⚠️ Yahoo 抓取異常: {e}")
+        print(f"⚠️ Yahoo 全球抓取異常: {e}")
         
     return prices
 
@@ -84,9 +115,9 @@ def process_and_save(etf_id, holdings, target_date):
     
     with open(f"{folder}/{target_date}.json", 'w', encoding='utf-8') as f:
         json.dump(final_data, f, ensure_ascii=False, indent=4)
-    print(f"✅ {etf_id} 數據存檔成功")
+    print(f"✅ {etf_id} 全球數據存檔成功：{folder}/{target_date}.json")
 
-# --- ETF 爬蟲：統一系列 (00981A, 00988A) ---
+# --- ETF 爬蟲模組 ---
 def run_uni_etf(etf_id, fund_code, target_date):
     print(f"📡 啟動 {etf_id} 採集...")
     dt = datetime.strptime(target_date, "%Y-%m-%d")
@@ -99,7 +130,6 @@ def run_uni_etf(etf_id, fund_code, target_date):
         if h: process_and_save(etf_id, h, target_date)
     except Exception as e: print(f"❌ {etf_id} 失敗: {e}")
 
-# --- ETF 爬蟲：群益 00982A ---
 def run_00982A(target_date):
     print("📡 啟動 00982A 採集...")
     formats = [target_date, target_date.replace("-", "/")]
@@ -114,7 +144,6 @@ def run_00982A(target_date):
                 return 
         except: continue
 
-# --- ETF 爬蟲：中信 00995A ---
 def run_00995A(target_date):
     print("📡 啟動 00995A 採集...")
     session = requests.Session()
@@ -123,7 +152,6 @@ def run_00995A(target_date):
         auth_res = session.post("https://www.ctbcinvestments.com.tw/API/home/AuthToken", params={"token": "www.ctbcinvestments.com"}, json={"token": "www.ctbcinvestments.com"}, headers=std_headers, timeout=15)
         token = auth_res.json().get('Data', {}).get('token', '')
         if not token: return
-        
         now = datetime.utcnow()
         iso_date = f"{target_date}T{now.strftime('%H:%M:%S.%f')[:-3]}Z"
         r = session.post("https://www.ctbcinvestments.com.tw/API/etf/ETFHoldingWeight", params={"token": token}, json={"FID": "E0036", "StartDate": iso_date, "token": token}, headers=std_headers, timeout=20)
@@ -137,6 +165,6 @@ def run_00995A(target_date):
 if __name__ == "__main__":
     t_date = os.environ.get("TARGET_DATE", datetime.now().strftime("%Y-%m-%d"))
     run_uni_etf("00981A", "49YTW", t_date)
-    run_uni_etf("00988A", "61YTW", t_date) # 支援美股換匯的新爬蟲
+    run_uni_etf("00988A", "61YTW", t_date) # 支援全球標的與自動換匯
     run_00982A(t_date)
     run_00995A(t_date)
