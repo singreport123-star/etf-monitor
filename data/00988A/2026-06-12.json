@@ -1,16 +1,16 @@
 {
     "etf_id": "00988A",
-    "date": "2026-06-11",
+    "date": "2026-06-12",
     "holdings": [
-        {
-            "id": "009150 KS",
-            "name": "Samsung Electro-Mechanics co(009150 ks)",
-            "share": 80000
-        },
         {
             "id": "MU US",
             "name": "MICRON TECHNOLOGY INC",
             "share": 105000
+        },
+        {
+            "id": "009150 KS",
+            "name": "Samsung Electro-Mechanics co(009150 ks)",
+            "share": 80000
         },
         {
             "id": "AMD US",
@@ -33,16 +33,6 @@
             "share": 410000
         },
         {
-            "id": "MRVL US",
-            "name": "MARVELL TECHNOLOGY INC",
-            "share": 200000
-        },
-        {
-            "id": "6981 JP",
-            "name": "MURATA MANUFACTURING CO LTD",
-            "share": 870000
-        },
-        {
             "id": "LITE US",
             "name": "LUMENTUM HOLDINGS INC",
             "share": 62000
@@ -50,12 +40,22 @@
         {
             "id": "2383",
             "name": "台光電",
-            "share": 310000
+            "share": 330000
+        },
+        {
+            "id": "MRVL US",
+            "name": "MARVELL TECHNOLOGY INC",
+            "share": 200000
         },
         {
             "id": "IFX GY",
             "name": "INFINEON TECHNOLOGIES AG",
             "share": 557550
+        },
+        {
+            "id": "6981 JP",
+            "name": "MURATA MANUFACTURING CO LTD",
+            "share": 870000
         },
         {
             "id": "3037",
@@ -73,19 +73,24 @@
             "share": 725429
         },
         {
-            "id": "6787 JP",
-            "name": "MEIKO ELECTRONICS CO LTD",
-            "share": 175000
-        },
-        {
             "id": "WDC US",
             "name": "WESTERN DIGITAL CORP",
             "share": 72000
         },
         {
+            "id": "6787 JP",
+            "name": "MEIKO ELECTRONICS CO LTD",
+            "share": 175000
+        },
+        {
             "id": "6997 JP",
             "name": "NIPPON CHEMI-CON CORP",
             "share": 1215100
+        },
+        {
+            "id": "6976 JP",
+            "name": "TAIYO YUDEN CO LTD",
+            "share": 315000
         },
         {
             "id": "5706 JP",
@@ -113,19 +118,14 @@
             "share": 375000
         },
         {
-            "id": "6976 JP",
-            "name": "TAIYO YUDEN CO LTD",
-            "share": 240000
+            "id": "5274",
+            "name": "信驊",
+            "share": 46000
         },
         {
             "id": "2308",
             "name": "台達電",
             "share": 350000
-        },
-        {
-            "id": "5274",
-            "name": "信驊",
-            "share": 46000
         },
         {
             "id": "AIXA GY",
@@ -148,19 +148,14 @@
             "share": 65518
         },
         {
-            "id": "3711",
-            "name": "日月光投控",
-            "share": 1100000
-        },
-        {
             "id": "7826 JP",
             "name": "FURUYA METAL CO LTD",
             "share": 374300
         },
         {
-            "id": "3436 JP",
-            "name": "SUMCO CORP",
-            "share": 875400
+            "id": "3711",
+            "name": "日月光投控",
+            "share": 1100000
         },
         {
             "id": "CRWD US",
@@ -168,14 +163,14 @@
             "share": 28000
         },
         {
+            "id": "3436 JP",
+            "name": "SUMCO CORP",
+            "share": 875400
+        },
+        {
             "id": "603256 CH",
             "name": "GRACE FABRIC TECHNOLOGY CO-A",
             "share": 580000
-        },
-        {
-            "id": "3017",
-            "name": "奇鋐",
-            "share": 215000
         },
         {
             "id": "6223",
@@ -183,34 +178,24 @@
             "share": 90000
         },
         {
+            "id": "3017",
+            "name": "奇鋐",
+            "share": 215000
+        },
+        {
             "id": "NVDA US",
             "name": "NVIDIA CORP(輝達公司)",
             "share": 75000
         },
         {
-            "id": "7220 JP",
-            "name": "MUSASHI SEIMITSU INDUSTRY CO",
-            "share": 380000
+            "id": "CRDO US",
+            "name": "CREDO TECHNOLOGY GROUP HOLDI",
+            "share": 60000
         },
         {
             "id": "2360",
             "name": "致茂",
             "share": 200000
-        },
-        {
-            "id": "SOI FP",
-            "name": "S.O.I.T.E.C.",
-            "share": 90000
-        },
-        {
-            "id": "5801 JP",
-            "name": "FURUKAWA ELECTRIC CO LTD",
-            "share": 50000
-        },
-        {
-            "id": "CRDO US",
-            "name": "CREDO TECHNOLOGY GROUP HOLDI",
-            "share": 60000
         },
         {
             "id": "DDOG US",
@@ -223,19 +208,24 @@
             "share": 38000
         },
         {
+            "id": "SOI FP",
+            "name": "S.O.I.T.E.C.",
+            "share": 90000
+        },
+        {
             "id": "6920 JP",
             "name": "LASERTEC CORP",
             "share": 50000
         },
         {
+            "id": "BESI NA",
+            "name": "BE SEMICONDUCTOR INDUSTRIES",
+            "share": 33000
+        },
+        {
             "id": "6274",
             "name": "台燿",
             "share": 230000
-        },
-        {
-            "id": "ORCL US",
-            "name": "ORACLE CORP",
-            "share": 50000
         },
         {
             "id": "GLW US",
@@ -245,7 +235,7 @@
         {
             "id": "HOT GY",
             "name": "HOCHTIEF AG",
-            "share": 17918
+            "share": 15200
         },
         {
             "id": "7769",
@@ -253,83 +243,83 @@
             "share": 36000
         },
         {
-            "id": "BESI NA",
-            "name": "BE SEMICONDUCTOR INDUSTRIES",
-            "share": 23000
-        },
-        {
             "id": "AXTI US",
             "name": "AXT INC",
             "share": 90000
+        },
+        {
+            "id": "7220 JP",
+            "name": "MUSASHI SEIMITSU INDUSTRY CO",
+            "share": 206400
         }
     ],
     "market_prices": {
         "6997 JP": 801.04,
-        "AMD US": 15124.87,
-        "ARM US": 10512.07,
-        "LITE US": 27855.96,
+        "AMD US": 15138.23,
+        "ARM US": 10530.71,
+        "LITE US": 27892.7,
         "5274": 17600.0,
-        "COHR US": 11634.9,
+        "COHR US": 11645.91,
         "HOT GY": 17547.19,
         "2454": 4085.0,
         "2308": 2160.0,
         "6274": 1475.0,
-        "TER US": 11726.28,
+        "TER US": 11732.55,
         "3037": 854.0,
         "6963 JP": 918.76,
         "4062 JP": 3549.13,
         "268A JP": 481.21,
         "009150 KS": 37350.87,
-        "IFX GY": 2785.79,
+        "IFX GY": 2789.44,
         "6981 JP": 1747.67,
-        "NOK US": 433.51,
-        "5801 JP": 7948.02,
-        "6515": 8720.0,
+        "NOK US": 434.13,
         "6920 JP": 7834.98,
-        "GEV US": 28704.48,
-        "GLW US": 5537.93,
-        "WDC US": 15997.51,
+        "6515": 8720.0,
+        "5801 JP": 7948.02,
+        "GEV US": 28733.13,
+        "GLW US": 5540.91,
+        "WDC US": 16008.07,
         "2360": 2190.0,
         "3711": 544.0,
-        "STM US": 2381.3,
+        "STM US": 2384.7,
         "285A JP": 14703.26,
         "3110 JP": 3377.62,
-        "FORM US": 3834.56,
+        "FORM US": 3834.44,
         "7220 JP": 999.84,
         "6869 HK": 932.02,
-        "NVDA US": 6428.98,
+        "NVDA US": 6428.46,
         "2330": 2250.0,
         "3436 JP": 664.22,
         "6787 JP": 5687.18,
-        "MU US": 29021.31,
-        "VSH US": 1863.68,
+        "MU US": 29077.31,
+        "VSH US": 1863.62,
         "7769": 7055.0,
         "6223": 6090.0,
-        "AAOI US": 5438.64,
+        "AAOI US": 5463.73,
         "5803 JP": 807.28,
         "603256 CH": 985.92,
-        "SNDK US": 55562.98,
+        "SNDK US": 55694.02,
         "5706 JP": 7275.62,
-        "CRDO US": 8314.48,
+        "CRDO US": 8315.8,
         "006400 KS": 10315.46,
-        "BE US": 7716.54,
+        "BE US": 7734.09,
         "7826 JP": 1592.33,
         "6976 JP": 3241.19,
-        "GOOGL US": 11044.55,
-        "NBIS US": 6726.53,
-        "SOI FP": 4709.92,
+        "GOOGL US": 11045.78,
+        "NBIS US": 6747.18,
+        "SOI FP": 4744.6,
         "2383": 5095.0,
-        "AIXA GY": 2007.37,
-        "CRWD US": 21232.83,
+        "AIXA GY": 2008.84,
+        "CRWD US": 21249.39,
         "3017": 2335.0,
         "010120 KS": 4749.04,
-        "ORCL US": 5719.58,
-        "DDOG US": 7313.55,
-        "MRVL US": 8351.79,
-        "CIEN US": 14186.15,
-        "AXTI US": 2835.52,
-        "VIAV US": 1549.38,
+        "ORCL US": 5723.04,
+        "DDOG US": 7313.32,
+        "MRVL US": 8357.22,
+        "CIEN US": 14199.3,
+        "AXTI US": 2850.77,
+        "VIAV US": 1549.33,
         "ENR GY": 5277.3,
-        "AVGO US": 12026.98
+        "AVGO US": 12026.6
     }
 }
