@@ -1,6 +1,6 @@
 {
     "etf_id": "00988A",
-    "date": "2026-06-25",
+    "date": "2026-06-26",
     "holdings": [
         {
             "id": "MU US",
@@ -20,7 +20,7 @@
         {
             "id": "AMD US",
             "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
-            "share": 185000
+            "share": 195000
         },
         {
             "id": "SNDK US",
@@ -28,14 +28,14 @@
             "share": 41000
         },
         {
+            "id": "BE US",
+            "name": "BLOOM ENERGY CORP- A",
+            "share": 230000
+        },
+        {
             "id": "6981 JP",
             "name": "MURATA MANUFACTURING CO LTD",
             "share": 1066000
-        },
-        {
-            "id": "BE US",
-            "name": "BLOOM ENERGY CORP- A",
-            "share": 209220
         },
         {
             "id": "MRVL US",
@@ -108,14 +108,19 @@
             "share": 475000
         },
         {
+            "id": "2303",
+            "name": "聯電",
+            "share": 6000000
+        },
+        {
             "id": "8035 JP",
             "name": "TOKYO ELECTRON LTD",
             "share": 76000
         },
         {
-            "id": "2303",
-            "name": "聯電",
-            "share": 6000000
+            "id": "CRDO US",
+            "name": "CREDO TECHNOLOGY GROUP HOLDI",
+            "share": 120000
         },
         {
             "id": "2330",
@@ -143,11 +148,6 @@
             "share": 46000
         },
         {
-            "id": "CRDO US",
-            "name": "CREDO TECHNOLOGY GROUP HOLDI",
-            "share": 97000
-        },
-        {
             "id": "6515",
             "name": "穎崴",
             "share": 88000
@@ -163,24 +163,24 @@
             "share": 380000
         },
         {
-            "id": "2308",
-            "name": "台達電",
-            "share": 350000
-        },
-        {
             "id": "3711",
             "name": "日月光投控",
             "share": 1100000
         },
         {
-            "id": "7826 JP",
-            "name": "FURUYA METAL CO LTD",
-            "share": 374300
+            "id": "2308",
+            "name": "台達電",
+            "share": 350000
         },
         {
             "id": "COHR US",
             "name": "COHERENT INC",
             "share": 55000
+        },
+        {
+            "id": "7826 JP",
+            "name": "FURUYA METAL CO LTD",
+            "share": 374300
         },
         {
             "id": "3436 JP",
@@ -203,96 +203,97 @@
             "share": 90000
         },
         {
-            "id": "SOI FP",
-            "name": "S.O.I.T.E.C.",
-            "share": 90000
-        },
-        {
             "id": "688146 CH",
             "name": "PERIC SPECIAL GASES CO LTD-A",
             "share": 200000
         },
         {
+            "id": "2327",
+            "name": "國巨*",
+            "share": 350000
+        },
+        {
+            "id": "SOI FP",
+            "name": "S.O.I.T.E.C.",
+            "share": 90000
+        },
+        {
             "id": "CRWD US",
             "name": "CROWDSTRIKE HOLDINGS INC - A",
             "share": 14000
-        },
-        {
-            "id": "7769",
-            "name": "鴻勁",
-            "share": 9000
         }
     ],
     "market_prices": {
         "3711": 641.0,
         "2454": 4310.0,
         "6223": 6905.0,
-        "ENR GY": 5964.51,
+        "ENR GY": 5963.06,
         "6787 JP": 6301.8,
-        "CRDO US": 8458.17,
-        "VIAV US": 1545.61,
+        "CRDO US": 8500.89,
+        "VIAV US": 1544.24,
         "7769": 6920.0,
         "7220 JP": 772.16,
-        "GEV US": 33738.21,
-        "MRVL US": 8480.75,
+        "GEV US": 33736.09,
+        "MRVL US": 8481.49,
         "6869 HK": 1168.35,
         "AIXA GY": 1897.7,
-        "IFX GY": 2937.74,
+        "IFX GY": 2936.29,
         "6515": 9100.0,
-        "GLW US": 6957.09,
-        "MU US": 36667.86,
-        "VSH US": 1777.96,
-        "ARM US": 10928.86,
+        "GLW US": 6966.03,
+        "MU US": 36674.15,
+        "VSH US": 1781.66,
+        "ARM US": 10934.53,
         "4062 JP": 5128.96,
         "3436 JP": 737.93,
         "2303": 178.5,
         "6274": 1700.0,
-        "LITE US": 26077.1,
+        "LITE US": 26076.1,
         "2330": 2390.0,
-        "CRWD US": 21617.26,
+        "CRWD US": 21667.43,
         "HOT GY": 18654.91,
-        "COHR US": 12100.59,
+        "COHR US": 12115.26,
         "3017": 2505.0,
         "5803 JP": 1251.8,
-        "NBIS US": 8267.33,
+        "NBIS US": 8277.95,
         "5274": 17425.0,
         "2308": 1980.0,
-        "WDC US": 21273.6,
-        "GOOGL US": 10815.31,
+        "WDC US": 21245.08,
+        "GOOGL US": 10804.66,
         "3110 JP": 3975.58,
         "006400 KS": 9937.94,
-        "SOI FP": 3968.01,
+        "SOI FP": 3969.82,
         "010120 KS": 4524.76,
-        "BE US": 10349.35,
+        "BE US": 10330.26,
         "6920 JP": 10343.51,
         "6278 JP": 4576.58,
-        "DDOG US": 6863.27,
-        "AXTI US": 2082.34,
+        "DDOG US": 6856.78,
+        "AXTI US": 2084.35,
         "268A JP": 540.9,
         "5706 JP": 9022.85,
         "6997 JP": 1163.11,
         "2360": 2185.0,
         "6976 JP": 3660.49,
-        "SNDK US": 67839.33,
-        "ORCL US": 4834.19,
+        "SNDK US": 67895.82,
+        "ORCL US": 4832.3,
         "3037": 1020.0,
         "6981 JP": 2299.96,
-        "STM US": 2289.71,
+        "STM US": 2290.84,
         "8035 JP": 14653.63,
         "603256 CH": 1296.4,
-        "NOK US": 428.59,
-        "TER US": 13885.23,
-        "AMD US": 16300.57,
+        "NOK US": 428.4,
+        "TER US": 13866.54,
+        "2327": 1125.0,
+        "AMD US": 16290.17,
         "285A JP": 20198.82,
         "009150 KS": 41260.02,
         "7826 JP": 1746.61,
         "2383": 5640.0,
         "6963 JP": 1100.87,
         "5801 JP": 9709.44,
-        "CIEN US": 14507.19,
-        "FORM US": 4623.32,
-        "AAOI US": 4347.09,
-        "NVDA US": 6157.01,
-        "AVGO US": 11897.19
+        "CIEN US": 14506.28,
+        "FORM US": 4627.48,
+        "AAOI US": 4347.61,
+        "NVDA US": 6160.75,
+        "AVGO US": 11898.67
     }
 }
