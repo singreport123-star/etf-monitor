@@ -1,6 +1,6 @@
 {
     "etf_id": "00988A",
-    "date": "2026-09-22",
+    "date": "2026-09-23",
     "holdings": [
         {
             "id": "LITE US",
@@ -38,14 +38,14 @@
             "share": 60000.0
         },
         {
+            "id": "2454",
+            "name": "聯發科",
+            "share": 380000.0
+        },
+        {
             "id": "PANW US",
             "name": "PALO ALTO NETWORKS INC",
             "share": 150000.0
-        },
-        {
-            "id": "MSFT US",
-            "name": "MICROSOFT CORP(微軟公司)",
-            "share": 100000.0
         },
         {
             "id": "INTC US",
@@ -53,9 +53,14 @@
             "share": 450399.0
         },
         {
-            "id": "2454",
-            "name": "聯發科",
-            "share": 330000.0
+            "id": "MSFT US",
+            "name": "MICROSOFT CORP(微軟公司)",
+            "share": 100000.0
+        },
+        {
+            "id": "HOOD US",
+            "name": "ROBINHOOD MARKETS INC - A",
+            "share": 400120.0
         },
         {
             "id": "3017",
@@ -88,11 +93,6 @@
             "share": 250000.0
         },
         {
-            "id": "HOOD US",
-            "name": "ROBINHOOD MARKETS INC - A",
-            "share": 300120.0
-        },
-        {
             "id": "3308 HK",
             "name": "ZHONGJI INNOLIGHT CO LTD-H",
             "share": 220000.0
@@ -103,9 +103,19 @@
             "share": 25000.0
         },
         {
+            "id": "CRWD US",
+            "name": "CROWDSTRIKE HOLDINGS INC - A",
+            "share": 130754.0
+        },
+        {
             "id": "NOW US",
             "name": "SERVICENOW INC",
             "share": 230000.0
+        },
+        {
+            "id": "2330",
+            "name": "台積電",
+            "share": 400000.0
         },
         {
             "id": "300757 CH",
@@ -113,14 +123,9 @@
             "share": 334997.0
         },
         {
-            "id": "CRWD US",
-            "name": "CROWDSTRIKE HOLDINGS INC - A",
-            "share": 130754.0
-        },
-        {
-            "id": "2330",
-            "name": "台積電",
-            "share": 400000.0
+            "id": "AMD US",
+            "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
+            "share": 50000.0
         },
         {
             "id": "4979",
@@ -133,19 +138,14 @@
             "share": 6000000.0
         },
         {
-            "id": "AMD US",
-            "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
-            "share": 50000.0
+            "id": "TWLO US",
+            "name": "TWILIO INC - A",
+            "share": 100000.0
         },
         {
             "id": "TER US",
             "name": "TERADYNE INC",
             "share": 70000.0
-        },
-        {
-            "id": "TWLO US",
-            "name": "TWILIO INC - A",
-            "share": 100000.0
         },
         {
             "id": "NET US",
@@ -156,11 +156,6 @@
             "id": "OKTA US",
             "name": "OKTA INC",
             "share": 120000.0
-        },
-        {
-            "id": "6515",
-            "name": "穎崴",
-            "share": 100000.0
         },
         {
             "id": "IFX GY",
@@ -176,6 +171,11 @@
             "id": "STX US",
             "name": "SEAGATE TECHNOLOGY",
             "share": 20000.0
+        },
+        {
+            "id": "COIN US",
+            "name": "COINBASE GLOBAL INC -CLASS A",
+            "share": 70000.0
         },
         {
             "id": "3081",
@@ -198,6 +198,11 @@
             "share": 500000.0
         },
         {
+            "id": "6515",
+            "name": "穎崴",
+            "share": 60000.0
+        },
+        {
             "id": "NTRA US",
             "name": "NATERA INC",
             "share": 25000.0
@@ -209,48 +214,49 @@
         }
     ],
     "market_prices": {
-        "AXTI US": 2449.37,
+        "AXTI US": 2449.53,
         "268A JP": 316.49,
         "6997 JP": 554.06,
-        "DDOG US": 7809.24,
+        "DDOG US": 7793.59,
         "3436 JP": 601.97,
-        "DASH US": 6287.04,
-        "GOOGL US": 11405.67,
-        "ENR GY": 5253.21,
-        "CRDO US": 5908.59,
-        "MPWR US": 42183.08,
+        "DASH US": 6286.41,
+        "COIN US": 6316.13,
+        "GOOGL US": 11405.2,
+        "ENR GY": 5252.48,
+        "CRDO US": 5909.22,
+        "MPWR US": 42167.48,
         "4062 JP": 3887.53,
-        "PLTR US": 5804.25,
-        "STM US": 1664.64,
+        "PLTR US": 5803.93,
+        "STM US": 1666.06,
         "3037": 1120.0,
-        "GLW US": 5040.07,
+        "GLW US": 5040.17,
         "6963 JP": 924.02,
-        "NBIS US": 7730.51,
+        "NBIS US": 7726.56,
         "006400 KS": 12366.43,
-        "AVGO US": 11393.82,
+        "AVGO US": 11399.19,
         "IFX GY": 2146.67,
-        "SNOW US": 10800.37,
-        "VIAV US": 1136.0,
-        "SOI FP": 5622.22,
+        "SNOW US": 10796.42,
+        "VIAV US": 1135.68,
+        "SOI FP": 5627.66,
         "6920 JP": 7771.09,
         "010120 KS": 4955.92,
         "5803 JP": 984.46,
         "6278 JP": 2661.93,
-        "NVDA US": 7182.75,
+        "NVDA US": 7184.01,
         "301377 CH": 1880.99,
         "2308": 1900.0,
-        "LMT US": 16614.89,
+        "LMT US": 16619.32,
         "3110 JP": 612.3,
-        "INTC US": 3843.34,
-        "NET US": 11111.48,
+        "INTC US": 3846.52,
+        "NET US": 11091.89,
         "4180 JP": 301.38,
-        "SPCX US": 4874.08,
-        "TWLO US": 8788.89,
+        "SPCX US": 4873.13,
+        "TWLO US": 8779.72,
         "7220 JP": 557.04,
         "2327": 571.0,
         "300757 CH": 2863.45,
-        "BE US": 8754.27,
-        "MU US": 33814.38,
+        "BE US": 8754.91,
+        "MU US": 33818.65,
         "3711": 693.0,
         "009150 KS": 34738.22,
         "5706 JP": 4531.65,
@@ -262,59 +268,59 @@
         "4979": 605.0,
         "6976 JP": 1863.75,
         "2383": 4860.0,
-        "FTNT US": 5445.08,
+        "FTNT US": 5441.92,
         "7769": 6155.0,
-        "SNDK US": 59798.81,
+        "SNDK US": 59783.8,
         "8035 JP": 10558.27,
-        "TSEM US": 7394.43,
+        "TSEM US": 7399.64,
         "300408 CH": 611.94,
-        "STX US": 29204.94,
-        "CRCL US": 2994.6,
+        "STX US": 29246.36,
+        "CRCL US": 2992.23,
         "FORM US": 3842.61,
         "3308 HK": 4920.13,
-        "GEV US": 29638.41,
-        "CIEN US": 11817.17,
+        "GEV US": 29648.84,
+        "CIEN US": 11812.59,
         "AEM US": 6297.32,
-        "KLAC US": 5800.93,
-        "MSFT US": 15696.81,
-        "VSH US": 1057.9,
+        "KLAC US": 5805.83,
+        "MSFT US": 15695.79,
+        "VSH US": 1060.43,
         "6274": 1440.0,
         "2303": 160.0,
         "2454": 5180.0,
-        "AAOI US": 3481.08,
+        "AAOI US": 3478.19,
         "NTRA US": 11929.45,
         "NOK US": 338.14,
         "3081": 2825.0,
-        "OKTA US": 6059.7,
-        "ARM US": 10233.79,
+        "OKTA US": 6044.22,
+        "ARM US": 10247.07,
         "3017": 3390.0,
         "2360": 2440.0,
         "HOT GY": 14550.35,
         "6515": 5765.0,
-        "CRWD US": 7869.16,
-        "PANW US": 11715.68,
-        "ORCL US": 4772.11,
+        "CRWD US": 7868.52,
+        "PANW US": 11718.21,
+        "ORCL US": 4770.37,
         "7826 JP": 2160.96,
         "603256 CH": 752.49,
-        "LITE US": 31506.66,
+        "LITE US": 31533.06,
         "5801 JP": 775.52,
         "005930 KS": 6463.74,
         "9988 HK": 463.36,
         "000660 KS": 43013.68,
-        "HOOD US": 3948.65,
+        "HOOD US": 3947.22,
         "285A JP": 10848.52,
         "6223": 5345.0,
-        "MRVL US": 8303.26,
-        "WDC US": 14864.59,
-        "AMAT US": 14761.66,
-        "NOW US": 4308.92,
+        "MRVL US": 8308.63,
+        "WDC US": 14866.63,
+        "AMAT US": 14771.78,
+        "NOW US": 4305.92,
         "6981 JP": 1543.28,
         "AIXA GY": 1320.91,
-        "AMD US": 19504.53,
+        "AMD US": 19515.44,
         "6787 JP": 4401.43,
-        "AEHR US": 3092.46,
+        "AEHR US": 3087.16,
         "2330": 2460.0,
-        "COHR US": 10171.82,
-        "TER US": 12149.15
+        "COHR US": 10185.1,
+        "TER US": 12153.26
     }
 }
