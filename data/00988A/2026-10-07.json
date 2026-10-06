@@ -5,309 +5,309 @@
         {
             "id": "LITE US",
             "name": "LUMENTUM HOLDINGS INC",
-            "share": 117000.0
+            "share": 117000
         },
         {
             "id": "BE US",
             "name": "BLOOM ENERGY CORP- A",
-            "share": 390000.0
+            "share": 390000
         },
         {
             "id": "3037",
             "name": "欣興",
-            "share": 2600000.0
+            "share": 2600000
         },
         {
             "id": "SPCX US",
             "name": "SPACE EXPLORATION TECHN-CL A",
-            "share": 550000.0
+            "share": 550000
         },
         {
             "id": "009150 KS",
             "name": "Samsung Electro-Mechanics co(009150 ks)",
-            "share": 70000.0
+            "share": 70000
         },
         {
             "id": "6981 JP",
             "name": "MURATA MANUFACTURING CO LTD",
-            "share": 1350000.0
+            "share": 1350000
         },
         {
             "id": "INTC US",
             "name": "INTEL CORP",
-            "share": 550399.0
+            "share": 550399
         },
         {
             "id": "2454",
             "name": "聯發科",
-            "share": 380000.0
+            "share": 380000
         },
         {
             "id": "PANW US",
             "name": "PALO ALTO NETWORKS INC",
-            "share": 150000.0
+            "share": 150000
         },
         {
             "id": "NVDA US",
             "name": "NVIDIA CORP(輝達公司)",
-            "share": 250000.0
+            "share": 250000
         },
         {
             "id": "3017",
             "name": "奇鋐",
-            "share": 510000.0
+            "share": 510000
         },
         {
             "id": "PLTR US",
             "name": "PALANTIR TECHNOLOGIES INC-A",
-            "share": 275000.0
+            "share": 275000
         },
         {
             "id": "MU US",
             "name": "MICRON TECHNOLOGY INC",
-            "share": 47000.0
+            "share": 47000
         },
         {
             "id": "2303",
             "name": "聯電",
-            "share": 9700000.0
+            "share": 9700000
         },
         {
             "id": "HOOD US",
             "name": "ROBINHOOD MARKETS INC - A",
-            "share": 400120.0
+            "share": 400120
         },
         {
             "id": "2383",
             "name": "台光電",
-            "share": 250000.0
+            "share": 250000
         },
         {
             "id": "TWLO US",
             "name": "TWILIO INC - A",
-            "share": 120000.0
+            "share": 120000
         },
         {
             "id": "CRWD US",
             "name": "CROWDSTRIKE HOLDINGS INC - A",
-            "share": 130754.0
+            "share": 130754
         },
         {
             "id": "OKTA US",
             "name": "OKTA INC",
-            "share": 160000.0
+            "share": 160000
         },
         {
             "id": "000660 KS",
             "name": "SK HYNIX INC",
-            "share": 25000.0
+            "share": 25000
         },
         {
             "id": "SNOW US",
             "name": "SNOWFLAKE INC-CLASS A(Snowflake公司)",
-            "share": 100000.0
+            "share": 100000
         },
         {
             "id": "AMD US",
             "name": "ADVANCED MICRO DEVICES.amd us(超微半導體公司)",
-            "share": 50000.0
+            "share": 50000
         },
         {
             "id": "NOW US",
             "name": "SERVICENOW INC",
-            "share": 230000.0
+            "share": 230000
         },
         {
             "id": "TER US",
             "name": "TERADYNE INC",
-            "share": 70000.0
+            "share": 70000
         },
         {
             "id": "NET US",
             "name": "CLOUDFLARE INC - CLASS A",
-            "share": 82000.0
+            "share": 82000
         },
         {
             "id": "992 HK",
             "name": "LENOVO GROUP LTD",
-            "share": 6000000.0
+            "share": 6000000
         },
         {
             "id": "300757 CH",
             "name": "ROBOTECHNIK INTELLIGENT TE-A",
-            "share": 334997.0
+            "share": 334997
         },
         {
             "id": "MRVL US",
             "name": "MARVELL TECHNOLOGY INC",
-            "share": 90000.0
+            "share": 90000
         },
         {
             "id": "5801 JP",
             "name": "FURUKAWA ELECTRIC CO LTD",
-            "share": 800000.0
+            "share": 800000
         },
         {
             "id": "IFX GY",
             "name": "INFINEON TECHNOLOGIES AG",
-            "share": 300000.0
+            "share": 300000
         },
         {
             "id": "2330",
             "name": "台積電",
-            "share": 200000.0
+            "share": 200000
         },
         {
             "id": "3081",
             "name": "聯亞",
-            "share": 150000.0
+            "share": 150000
         },
         {
             "id": "285A JP",
             "name": "KIOXIA HOLDINGS CORP",
-            "share": 111000.0
+            "share": 111000
         },
         {
             "id": "COIN US",
             "name": "COINBASE GLOBAL INC -CLASS A",
-            "share": 70000.0
+            "share": 70000
         },
         {
             "id": "IREN US",
             "name": "IREN LTD",
-            "share": 325000.0
+            "share": 325000
         },
         {
             "id": "SNDK US",
             "name": "SANDISK CORP",
-            "share": 5000.0
+            "share": 5000
         },
         {
             "id": "2308",
             "name": "台達電",
-            "share": 100000.0
+            "share": 100000
         },
         {
             "id": "1303",
             "name": "南亞",
-            "share": 500000.0
+            "share": 500000
         },
         {
             "id": "4180 JP",
             "name": "APPIER GROUP INC",
-            "share": 500000.0
+            "share": 500000
         }
     ],
     "market_prices": {
-        "6963 JP": 1063.52,
-        "300757 CH": 2532.36,
-        "268A JP": 376.52,
-        "5706 JP": 547.07,
-        "006400 KS": 13659.13,
-        "MU US": 33953.99,
-        "6223": 5670.0,
-        "3436 JP": 740.7,
-        "AMD US": 20424.43,
-        "5801 JP": 893.06,
-        "AXTI US": 2732.9,
-        "2383": 5995.0,
-        "300408 CH": 556.93,
-        "6871 JP": 3065.05,
-        "LMT US": 16113.53,
-        "NET US": 11641.29,
-        "6515": 6130.0,
-        "ENR GY": 5224.37,
-        "3017": 3685.0,
-        "000660 KS": 42117.62,
-        "2308": 2050.0,
-        "005930 KS": 6461.36,
-        "9988 HK": 438.84,
-        "AMAT US": 16975.01,
-        "3711": 744.0,
-        "6278 JP": 3395.22,
-        "AVGO US": 11823.28,
-        "INTC US": 3682.76,
-        "4979": 568.0,
-        "8035 JP": 2546.91,
-        "6997 JP": 477.36,
-        "7769": 5905.0,
-        "SPCX US": 5548.13,
-        "AIXA GY": 1424.96,
-        "MPWR US": 46708.53,
-        "OKTA US": 7105.48,
-        "1303": 293.0,
-        "CRCL US": 2744.66,
-        "STX US": 26503.6,
-        "GEV US": 33399.43,
-        "MRVL US": 9327.85,
-        "STM US": 1846.78,
-        "4180 JP": 278.86,
-        "7826 JP": 2362.93,
-        "6869 HK": 730.04,
-        "NTRA US": 13233.31,
-        "CIEN US": 12865.01,
-        "4062 JP": 2466.36,
-        "TWLO US": 9453.57,
-        "IFX GY": 2268.84,
-        "3308 HK": 4376.21,
-        "COIN US": 6066.93,
-        "ARM US": 9717.26,
-        "BE US": 9355.5,
-        "2360": 2350.0,
-        "WDC US": 13205.47,
-        "KLAC US": 6424.24,
-        "LITE US": 34991.1,
-        "CRWD US": 9003.6,
-        "2303": 147.5,
-        "VSH US": 1182.87,
-        "3037": 1310.0,
-        "6274": 1755.0,
-        "TSEM US": 8408.83,
-        "6920 JP": 9258.79,
-        "603256 CH": 620.39,
-        "2330": 2585.0,
-        "SOI FP": 6066.82,
-        "NOW US": 4446.17,
-        "285A JP": 3726.39,
-        "2327": 625.0,
-        "NBIS US": 7843.3,
-        "GLW US": 5237.87,
-        "FTNT US": 6029.74,
-        "AEHR US": 3325.45,
-        "VECO US": 1794.49,
-        "HOOD US": 3619.34,
-        "5274": 18985.0,
-        "FORM US": 4652.0,
-        "IREN US": 1306.05,
-        "CRDO US": 7111.2,
-        "3110 JP": 724.0,
-        "VIAV US": 1514.9,
-        "010120 KS": 5166.71,
-        "3665": 2325.0,
-        "SNDK US": 53532.68,
-        "DDOG US": 8951.78,
-        "NOK US": 331.95,
-        "009150 KS": 39789.63,
-        "MSFT US": 16975.01,
-        "6787 JP": 5429.97,
-        "COHR US": 10713.53,
+        "ORCL US": 4625.46,
+        "8035 JP": 2545.63,
+        "INTC US": 3637.83,
+        "HOT GY": 14770.52,
+        "268A JP": 376.33,
+        "AVGO US": 12024.1,
+        "CRCL US": 2676.89,
+        "PLTR US": 6118.98,
+        "6963 JP": 1062.98,
+        "000660 KS": 42142.44,
+        "6787 JP": 5427.24,
+        "5706 JP": 546.8,
+        "6869 HK": 729.92,
+        "STM US": 1876.75,
+        "SNOW US": 10716.54,
+        "AEHR US": 3084.28,
+        "4062 JP": 2465.12,
+        "TSEM US": 8239.93,
+        "006400 KS": 13667.18,
+        "WDC US": 13061.94,
         "2454": 4920.0,
-        "6981 JP": 1756.09,
-        "301377 CH": 1618.62,
-        "AAOI US": 4085.36,
-        "6976 JP": 2214.75,
-        "GOOGL US": 10986.75,
-        "ORCL US": 4637.86,
+        "301377 CH": 1618.66,
+        "AMD US": 20804.24,
+        "2330": 2585.0,
+        "VECO US": 1774.43,
+        "7220 JP": 635.17,
+        "2308": 2050.0,
+        "ARM US": 9659.73,
+        "COIN US": 5913.25,
+        "5803 JP": 1163.97,
+        "CIEN US": 13809.49,
+        "4979": 568.0,
+        "3110 JP": 723.63,
+        "NVDA US": 7635.7,
+        "6223": 5670.0,
+        "2383": 5995.0,
+        "LMT US": 16136.61,
+        "5274": 18985.0,
+        "6976 JP": 2213.64,
+        "6515": 6130.0,
+        "NOK US": 344.94,
+        "TER US": 13695.25,
+        "MSFT US": 16862.47,
+        "HOOD US": 3558.63,
+        "CRDO US": 7040.35,
         "3081": 2920.0,
-        "5803 JP": 1164.56,
-        "PLTR US": 6157.53,
-        "AEM US": 5812.62,
-        "PANW US": 13567.54,
-        "DASH US": 6123.67,
-        "SNOW US": 10988.18,
-        "HOT GY": 14500.22,
-        "TER US": 13911.18,
-        "7220 JP": 635.49,
-        "NVDA US": 7702.32
+        "GLW US": 5341.08,
+        "COHR US": 10648.79,
+        "1303": 293.0,
+        "NTRA US": 12768.79,
+        "6871 JP": 3063.51,
+        "300408 CH": 556.94,
+        "MRVL US": 9104.9,
+        "DDOG US": 8795.56,
+        "TWLO US": 9009.26,
+        "6997 JP": 477.12,
+        "OKTA US": 6931.52,
+        "3711": 744.0,
+        "6981 JP": 1755.21,
+        "ENR GY": 5280.71,
+        "4180 JP": 278.72,
+        "GOOGL US": 11066.02,
+        "3665": 2325.0,
+        "MU US": 33675.36,
+        "KLAC US": 6290.89,
+        "FTNT US": 6039.7,
+        "285A JP": 3724.52,
+        "IREN US": 1331.3,
+        "3037": 1310.0,
+        "9988 HK": 438.76,
+        "2303": 147.5,
+        "3436 JP": 740.33,
+        "GEV US": 32679.79,
+        "MPWR US": 46841.84,
+        "6278 JP": 3393.52,
+        "010120 KS": 5169.76,
+        "CRWD US": 8858.79,
+        "AEM US": 5949.29,
+        "009150 KS": 39813.08,
+        "LITE US": 35765.65,
+        "7826 JP": 2361.74,
+        "STX US": 25646.42,
+        "6920 JP": 9254.14,
+        "BE US": 9487.5,
+        "IFX GY": 2316.58,
+        "3308 HK": 4375.45,
+        "2327": 625.0,
+        "NBIS US": 8035.14,
+        "AXTI US": 2745.06,
+        "VSH US": 1189.73,
+        "AMAT US": 16866.28,
+        "FORM US": 4557.14,
+        "2360": 2350.0,
+        "VIAV US": 1505.45,
+        "AIXA GY": 1411.15,
+        "300757 CH": 2532.42,
+        "DASH US": 6116.6,
+        "5801 JP": 892.61,
+        "7769": 5905.0,
+        "SNDK US": 53023.1,
+        "3017": 3685.0,
+        "NET US": 11331.36,
+        "603256 CH": 620.41,
+        "NOW US": 4336.92,
+        "SPCX US": 5467.55,
+        "6274": 1755.0,
+        "SOI FP": 6000.97,
+        "AAOI US": 4120.09,
+        "005930 KS": 6465.17,
+        "PANW US": 13318.69
     }
 }
